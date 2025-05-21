@@ -1,0 +1,5 @@
+move not file-specific details to top bar with lualine
+
+iron out lualine inconsistencies regarding multi window use
+
+better way to close terminal?
