@@ -5,5 +5,7 @@
 	helper = 
 	helper = !/usr/bin/gh auth git-credential
 [user]
-    name = OGBlackDiamond
 	email = caden.feller@gmail.com
+	signingkey = /home/caden/.ssh/id_rsa.pub
+[gpg]
+	format = ssh
