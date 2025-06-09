@@ -12,7 +12,7 @@ sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-releas
 
 echo \n\nInstalling nessecary packages
 
-sudo dnf install nvim btop cava code gh git
+sudo dnf install nvim btop cava code gh git zsh discord
 
 curl -s "https://get.sdkman.io" | bash
 source "$HOME/.sdkman/bin/sdkman-init.sh"
