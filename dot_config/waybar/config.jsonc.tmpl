@@ -1,7 +1,11 @@
 {
   "layer": "bottom",
   "position": "top",
+  {{ if eq .chezmoi.hostname "zaku"}}
   "output": ["DP-3"],
+  {{ else }}
+  "output": ["eDP-1"],
+  {{ end }}
   "height": 43,
   "spacing": 2,
   "exclusive": true,
@@ -16,6 +20,9 @@
     "pulseaudio",
     "tray",
     "custom/notification",
+    {{ if not (eq .chezmoi.hostname "zaku") }}
+    "battery",
+    {{ end }}
     "custom/power",
   ],
   "custom/spotify": {
@@ -93,6 +100,42 @@
   "custom/sep": {
     "format": "|",
     "tooltip": false,
+  },
+  "battery": {
+    "format": "{capacity}% {icon}",
+    "format-icons": {
+      "charging": [
+	  "󰢜",
+	  "󰂆",
+	  "󰂇",
+	  "󰂈",
+	  "󰢝",
+	  "󰂉",
+	  "󰢞",
+	  "󰂊",
+	  "󰂋",
+	  "󰂅"
+      ],
+      "default": [
+	  "󰁺",
+	  "󰁻",
+	  "󰁼",
+	  "󰁽",
+	  "󰁾",
+	  "󰁿",
+	  "󰂀",
+          "󰂁",
+	  "󰂂",
+	  "󰁹"
+      ]
+    },
+    "format-full": "Charged ",
+    "interval": 5,
+    "states": {
+      "warning": 20,
+      "critical": 10
+    },
+    "tooltip": false
   },
   "custom/power": {
     "tooltip": false,

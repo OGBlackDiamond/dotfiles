@@ -40,6 +40,11 @@ return {
 			lspconfig.clangd.setup({})
 			lspconfig.jdtls.setup({})
 			lspconfig.jedi_language_server.setup({})
+
+			vim.diagnostic.config({
+				virtual_text = true,
+			})
+
 		end,
 	},
 }
