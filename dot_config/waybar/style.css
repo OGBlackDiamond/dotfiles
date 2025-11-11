@@ -12,7 +12,7 @@ window#waybar {
   /* background-color: #1e1e2e; */
   /* background-color: #181825; */
   /* background-color: #11111b; */
-  background-color: rgba(24, 24, 37, 0.6);
+  background-color: rgba(24, 24, 37, 0.9);
 }
 
 #workspaces button {
@@ -42,6 +42,7 @@ window#waybar {
 #clock,
 #pulseaudio,
 #custom-logo,
+#battery,
 #custom-power,
 #custom-spotify,
 #custom-notification,
@@ -68,6 +69,22 @@ window#waybar {
 #custom-sep {
   padding: 0px;
   color: #585b70;
+}
+
+#battery {
+  color: #ffffff;
+}
+
+#battery.charging {
+  color: #aaffaa;
+}
+
+#battery.warning {
+  color: #aadddd;
+}
+
+#battery.critical {
+  color: #ffaaaa;
 }
 
 window#waybar.empty #window {
