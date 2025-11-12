@@ -1,29 +1,9 @@
-HOST rx-78-2
-	HOSTNAME rx-78-2.ogblackdiamond.dev
+HOST hashmal
+	HOSTNAME hashmal.ogblackdiamond.dev
 	USER caden
 	PORT 20022
 
 HOST zaku-from-rx
 	HOSTNAME zaku
-	ProxyJump rx-78-2
+	ProxyJump hashmal
 	PORT 22
-
-HOST barbatos-from-rx
-	HOSTNAME barbatos
-	ProxyJump rx-78-2
-	PORT 22
-
-HOST fyrerobotics
-        HOSTNAME fyrerobotics.org
-        USER fyre5480
-        PubkeyAcceptedAlgorithms +ssh-rsa
-        HostkeyAlgorithms +ssh-rsa
-
-HOST lighter-fluid
-	HOSTNAME lighter-fluid
-	USER pi
-
-HOST roboRIO
-	HOSTNAME roboRIO-5480-frc.local
-	USER lvuser
-
