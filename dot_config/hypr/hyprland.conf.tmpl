@@ -58,8 +58,9 @@
 # Execute your favorite apps at launch
 # exec-once = waybar & hyprpaper & firefox
 exec-once = systemctl --user start hyprpolkitagent
-exec-once = dunst & kwalletd6
+exec-once = dunst
 exec-once = hyprpaper & waybar & udiskie
+exec-once = hypridle
 
 # Source a file (multi-file configs)
 # source = ~/.config/hypr/myColors.conf
@@ -194,6 +195,10 @@ bind = $mainMod, V, togglefloating,
 bind = ALT, SPACE, exec, $menu
 bind = $mainMod, P, pseudo, # dwindle
 bind = $mainMod, J, togglesplit, # dwindle
+
+bind = $mainMod, f, fullscreen
+
+bind = $mainMod, l, exec, hyprlock
 
 bindel = , XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 1%+
 bindel = , XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 1%-

@@ -80,11 +80,11 @@ window#waybar {
 }
 
 #battery.warning {
-  color: #aadddd;
+  color: #dddd77;
 }
 
 #battery.critical {
-  color: #ffaaaa;
+  color: #dd7777;
 }
 
 window#waybar.empty #window {

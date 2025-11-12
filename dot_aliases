@@ -4,3 +4,7 @@ alias sys-up-down="sudo dnf upgrade --refresh -y && shutdown now"
 alias fix-arduino="sudo chmod a+rw /dev/ttyACM0"
 
 alias chezmoi="~/bin/chezmoi"
+
+alias cmd-screensaver="bash ~/bin/cmd-screensaver"
+
+alias launch-screensaver="bash ~/bin/launch-screensaver"
