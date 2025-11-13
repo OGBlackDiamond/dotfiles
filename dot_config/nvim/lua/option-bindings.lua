@@ -21,4 +21,4 @@ vim.keymap.set("n", "<leader>Z", "<C-w>s<C-w>T")
 vim.keymap.set("n", "<leader>T", ":10split<CR><C-w>j:terminal<CR>i")
 vim.keymap.set('t', '<leader>Q', "<C-\\><C-n><C-w>k",{silent = true})
 
-vim.keymap.set("n", "<leader>j", ":vim.diagnostic.open_float()<CR>")
+vim.keymap.set("n", "<leader>j", vim.diagnostic.open_float)
