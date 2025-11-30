@@ -1,7 +1,9 @@
+{{ if not (eq .chezmoi.hostname "zaku") }}
 HOST hashmal
 	HOSTNAME hashmal.ogblackdiamond.dev
 	USER caden
 	PORT 20022
+{{ end }}
 
 HOST zaku-from-rx
 	HOSTNAME zaku
