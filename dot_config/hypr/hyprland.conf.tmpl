@@ -71,10 +71,15 @@ $fileManager = dolphin
 $menu = rofi -show drun
 
 # Some default env vars.
-env = HYPRCURSOR_SIZE,6
 env = HYPRCURSOR_THEME,broodwar
-env = XCURSOR_SIZE, 6
 env = XCURSOR_THEME,broodwar
+{{ if eq .chezmoi.hostname "gameboy-advance" }}
+env = HYPRCURSOR_SIZE, 12
+env = XCURSOR_SIZE, 12
+{{ else }}
+env = HYPRCURSOR_SIZE,6
+env = XCURSOR_SIZE, 6
+{{ end }}
 env = QT_QPA_PLATFORMTHEME,qt6ct # change to qt6ct if you have that
 
 # For all categories, see https://wiki.hyprland.org/Configuring/Variables/
