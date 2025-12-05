@@ -13,6 +13,11 @@ return {
                 winbar = false,
                 statusline = false,
             },
+	    window = {
+		mappings = {
+		    ["<Esc>"] = none,
+		},
+	    },
             filesystem = {
                 filtered_items = {
                     visible = false,
@@ -32,8 +37,8 @@ return {
                 leave_dirs_open = true,
             }
         })
-        vim.keymap.set("n", "<C-[>", ":Neotree filesystem show left<CR>", {})
-        vim.keymap.set("n", "<C-]>", ":Neotree filesystem close<CR>", {})
-        vim.keymap.set("n", "<C-\\>", ":Neotree filesystem focus<CR>", {})
+        -- vim.keymap.set("n", "<C-[>", ":Neotree filesystem show left<CR>", {})
+        -- vim.keymap.set("n", "<C-]>", ":Neotree filesystem close<CR>", {})
+        vim.keymap.set("n", "<C-\\>", ":Neotree filesystem toggle<CR>", {})
     end,
 }
