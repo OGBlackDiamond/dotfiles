@@ -12,7 +12,7 @@ window#waybar {
   /* background-color: #1e1e2e; */
   /* background-color: #181825; */
   /* background-color: #11111b; */
-  background-color: rgba(24, 24, 37, 0.9);
+  background-color: rgba(37, 24, 24, 0.6);
 }
 
 #workspaces button {
@@ -20,22 +20,22 @@ window#waybar {
   margin: 0.4rem 0.25rem;
   border-radius: 6px;
   /* background-color: #181825; */
-  background-color: #1e1e2e;
+  background-color: #2e1e1e;
   color: #cdd6f4;
 }
 
 #workspaces button:hover {
-  color: #1e1e2e;
-  background-color: #cdd6f4;
+  color: #2e1e1e;
+  background-color: #f4d6cd;
 }
 
 #workspaces button.active {
-  background-color: #1e1e2e;
-  color: #89b4fa;
+  background-color: #2e1e1e;
+  color: #fab489;
 }
 
 #workspaces button.urgent {
-  background-color: #1e1e2e;
+  background-color: #2e1e1e;
   color: #f38ba8;
 }
 
@@ -92,35 +92,35 @@ window#waybar.empty #window {
 }
 
 #cpu {
-  color: #94e2d5;
+  color: #d5e294;
 }
 
 #memory {
-  color: #cba6f7;
+  color: #f7a6cb;
 }
 
 #clock {
-  color: #74c7ec;
+  color: #ecc774;
 }
 
 #clock.simpleclock {
-  color: #89b4fa;
+  color: #fab489;
 }
 
 #window {
-  color: #cdd6f4;
+  color: #f4d6cd;
 }
 
 #pulseaudio {
-  color: #b4befe;
+  color: #febeb4;
 }
 
 #pulseaudio.muted {
-  color: #a6adc8;
+  color: #c8ada6;
 }
 
 #custom-logo {
-  color: #89b4fa;
+  color: #fab489;
 }
 
 #custom-power {
