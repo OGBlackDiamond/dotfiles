@@ -1,4 +1,5 @@
 return {
+{{ if eq .chezmoi.hostname "zaku" }}
 	"gorbit99/codewindow.nvim",
 	config = function()
 		local codewindow = require("codewindow")
@@ -9,4 +10,5 @@ return {
 		})
 		codewindow.apply_default_keybinds()
 	end,
+{{ end }} 
 }
