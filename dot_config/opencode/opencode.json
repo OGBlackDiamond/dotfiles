@@ -12,7 +12,24 @@
           "name": "Llama 3.2"
         },
 	"gpt-oss": {
-	  "name": "GPT-OSS"
+	  "name": "GPT-OSS",
+	  "modalities": {
+    	    "input": ["text", "image"],
+    	    "output": ["text"]
+  	  }
+	}
+      }
+    }
+  },
+  "provider": {
+    "github-copilot": {
+      "npm": "@ai-sdk/openai-compatible",
+      "models": {
+        "claude-sonnet-4.5": {
+	  "modalities": {
+    	    "input": ["text", "image"],
+    	    "output": ["text"]
+  	  }
 	}
       }
     }
