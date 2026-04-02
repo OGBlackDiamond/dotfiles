@@ -23,15 +23,24 @@
   },
   "provider": {
     "github-copilot": {
-      "npm": "@ai-sdk/openai-compatible",
       "models": {
+        "gpt-4.1": {
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          }
+        },
         "claude-sonnet-4.5": {
-	  "modalities": {
-    	    "input": ["text", "image"],
-    	    "output": ["text"]
-  	  }
-	}
-      }
-    }
-  }
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          }
+        },
+        "claude-opus-4.5": {
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          }
+        }
+}}}
 }
