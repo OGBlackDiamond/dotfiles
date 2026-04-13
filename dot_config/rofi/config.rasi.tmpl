@@ -157,9 +157,7 @@ configuration {
       sorting-method:    "name";
   }
 
-  {{ if eq .chezmoi.hostname "gameboy-advance" }}
-  dpi: 192;
-  {{ end }}
+  backend: "wayland";
 
 }
 

@@ -44,8 +44,6 @@
 {{ else if eq .chezmoi.hostname "gameboy-advance" }}
 
     monitor = eDP-1, 3840x2160, 0x0, 2
-    monitor = DP-5, 1920x1080@30, -1920x0, 1
-    monitor = DP-4, 1920x1080@60, -3840x0, 1
 
     workspace = 1, monitor:eDP-1
     workspace = 2, monitor:eDP-1
@@ -70,7 +68,7 @@ exec-once = hypridle
 # Set programs that you use
 $terminal = kitty
 $fileManager = dolphin
-$menu = rofi -show drun
+$menu = WAYLAND_DISPLAY=$WAYLAND_DISPLAY rofi -show drun
 
 # Some default env vars.
 env = HYPRCURSOR_THEME,broodwar
@@ -182,7 +180,7 @@ device {
 }
 
 xwayland {
-    force_zero_scaling = true
+    #force_zero_scaling = true
 }
 
 
