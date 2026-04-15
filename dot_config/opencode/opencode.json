@@ -1,5 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "plugin": ["opencode-claude-auth@latest"],
   "provider": {
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",
@@ -11,8 +12,8 @@
         "llama3.2:latest": {
           "name": "Llama 3.2"
         },
-        "gpt-oss": {
-          "name": "GPT-OSS",
+        "gemma4:latest": {
+          "name": "Gemma 4",
           "modalities": {
             "input": ["text", "image"],
             "output": ["text"]
