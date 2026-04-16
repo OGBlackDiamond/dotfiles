@@ -33,6 +33,7 @@ source ~/repos/powerlevel10k/powerlevel10k.zsh-theme
 [[ ! -f ~/repos/powerlevel10k/.p10k.zsh ]] || source ~/repos/powerlevel10k/.p10k.zsh
 
 path+=("/usr/bin/java")
+path+=("/data/bin")
 
 export PATH
 
@@ -49,3 +50,4 @@ export SDKMAN_DIR="$HOME/.sdkman"
 
 # opencode
 export PATH=/home/caden/.opencode/bin:$PATH
+export OPENCODE_ENABLE_EXA=1

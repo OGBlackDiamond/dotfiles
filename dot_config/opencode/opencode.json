@@ -55,6 +55,6 @@
     }
   },
   "compaction": {
-    "auto": false
+    "auto": true
   }
 }
