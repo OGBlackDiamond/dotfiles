@@ -56,5 +56,14 @@
   },
   "compaction": {
     "auto": true
+  },
+  "mcp": {
+    "obsidian": {
+      "type": "local",
+      "command": ["npx", "-y", "obsidian-mcp-pro"],
+      "environment": {
+        "OBSIDIAN_VAULT_PATH": "/home/caden/Documents/Obsidian Vault"
+      }
+    }
   }
 }
