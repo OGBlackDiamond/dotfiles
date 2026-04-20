@@ -32,6 +32,9 @@ return {
             lspconfig.pyright.setup({
                 capabilities = capabilities
             })
+	    lspconfig.gopls.setup({
+		capabilities = capabilities
+	    })
 			vim.keymap.set("n", "<leader>k", vim.lsp.buf.hover, {})
 			vim.keymap.set("n", "<leader>df", vim.lsp.buf.definition, {})
 			vim.keymap.set({ "n" }, "<leader>ca", vim.lsp.buf.code_action, {})

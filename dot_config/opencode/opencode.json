@@ -60,7 +60,7 @@
   "mcp": {
     "obsidian": {
       "type": "local",
-      "command": ["npx", "-y", "obsidian-mcp-pro"],
+      "command": ["npx", "-y", "obsidian-mcp-pro@1.1.3"],
       "environment": {
         "OBSIDIAN_VAULT_PATH": "/home/caden/Documents/Obsidian Vault"
       }
