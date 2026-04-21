@@ -69,6 +69,7 @@ exec-once = hypridle
 $terminal = kitty
 $fileManager = dolphin
 $menu = WAYLAND_DISPLAY=$WAYLAND_DISPLAY rofi -show drun
+$browser = firefox
 
 # Some default env vars.
 env = HYPRCURSOR_THEME,broodwar
@@ -201,6 +202,7 @@ $mainMod = SUPER
 
 # Example binds, see https://wiki.hyprland.org/Configuring/Binds/ for more
 bind = $mainMod, Q, exec, $terminal
+bind = $mainMod, W, exec, $browser
 bind = $mainMod, C, killactive, 
 bind = $mainMod, M, exit, 
 bind = $mainMod, E, exec, $fileManager
