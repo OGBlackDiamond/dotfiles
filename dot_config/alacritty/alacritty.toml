@@ -1,0 +1,45 @@
+[font]
+normal = { family = "FiraCode Nerd Font", style = "Regular" }
+bold = { family = "FiraCode Nerd Font", style = "Bold" }
+italic = { family = "FiraCode Nerd Font", style = "Light" }
+bold_italic = { family = "FiraCode Nerd Font", style = "Bold" }
+size = 11.0
+
+[cursor]
+style = { shape = "Block", blinking = "Off" }
+unfocused_hollow = true
+
+[window]
+opacity = 0.75
+
+[colors.primary]
+background = "#282420"
+foreground = "#e5c5a9"
+
+[colors.cursor]
+cursor = "#f6f6ec"
+text = "#282420"
+
+[colors.selection]
+background = "#111417"
+text = "#282420"
+
+[colors.normal]
+black   = "#111417"
+red     = "#c84134"
+green   = "#84c44b"
+yellow  = "#f4ae2e"
+blue    = "#1397b9"
+magenta = "#d0623c"
+cyan    = "#4f9452"
+white   = "#e5c5a9"
+
+[colors.bright]
+black   = "#665e54"
+red     = "#ff6459"
+green   = "#97e035"
+yellow  = "#dfd561"
+blue    = "#5ed9ff"
+magenta = "#ff9168"
+cyan    = "#83ef88"
+white   = "#f6f6ec"
