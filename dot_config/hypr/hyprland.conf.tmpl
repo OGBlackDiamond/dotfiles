@@ -66,8 +66,8 @@ exec-once = hypridle
 # source = ~/.config/hypr/myColors.conf
 
 # Set programs that you use
-$terminal = alacritty
-$fileManager = dolphin
+$terminal = kitty
+$fileManager = demo
 $menu = WAYLAND_DISPLAY=$WAYLAND_DISPLAY rofi -show drun
 $browser = firefox
 
@@ -191,11 +191,11 @@ xwayland {
 # windowrulev2 = float,class:^(kitty)$,title:^(kitty)$
 # See https://wiki.hyprland.org/Configuring/Window-Rules/ for more
 #windowrulev2 = suppressevent maximize, class:.* # You'll probably like this.
-windowrulev2 = opacity 1 0.9, class:.*
-windowrulev2 = opacity 1 override 1 override, class:kitty
+windowrule = opacity 1 0.9, match:class (.*)
+windowrule = opacity 1 override 1 override, match:class kitty
 
-windowrule = fullscreen, class:Screensaver
-windowrule = float, title:Photon
+windowrule = match:class Screensaver, fullscreen 1
+windowrule = match:title Photon, float 1
 
 # See https://wiki.hyprland.org/Configuring/Keywords/ for more
 $mainMod = SUPER

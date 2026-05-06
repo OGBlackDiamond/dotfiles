@@ -1,92 +1,88 @@
+local colors = {
+    blue   = "#80a0ff",
+    cyan   = "#79dac8",
+    black  = "#080808",
+    white  = "#c0c8d8", -- use nordic fg instead of pure white
+    red    = "#ff5189",
+    violet = "#d183e8",
+    grey   = "#303030",
+}
+
+local bubbles_theme = {
+    normal   = {
+        a = { fg = colors.black, bg = colors.violet },
+        -- Keep the mode/location "bubbles", but make the rest of the bar transparent.
+        b = { fg = colors.white, bg = colors.grey },
+        c = { fg = colors.white, bg = "NONE" },
+    },
+    insert   = { a = { fg = colors.black, bg = colors.blue } },
+    visual   = { a = { fg = colors.black, bg = colors.cyan } },
+    replace  = { a = { fg = colors.black, bg = colors.red } },
+    terminal = { a = { fg = colors.black, bg = colors.white } },
+    inactive = {
+        a = { fg = colors.white, bg = colors.black },
+        b = { fg = colors.white, bg = colors.black },
+        c = { fg = colors.white, bg = "NONE" },
+    },
+}
+
 return {
-	"nvim-lualine/lualine.nvim",
-	config = function()
-        -- Bubbles config for lualine
-        -- Author: lokesh-krishna
-        -- MIT license, see LICENSE for more details.
-
-        -- stylua: ignore
-        local colors = {
-            blue   = '#80a0ff',
-            cyan   = '#79dac8',
-            black  = '#080808',
-            white  = '#ffffff',
-            red    = '#ff5189',
-            violet = '#d183e8',
-            grey   = '#303030',
-        }
-
-		local bubbles_theme = {
-			normal = {
-				a = { fg = colors.black, bg = colors.violet },
-				b = { fg = colors.white, bg = colors.grey },
-				c = { fg = colors.white, bg = colors.white },
-			},
-
-			insert = { a = { fg = colors.black, bg = colors.blue } },
-			visual = { a = { fg = colors.black, bg = colors.cyan } },
-			replace = { a = { fg = colors.black, bg = colors.red } },
-			terminal = { a = { fg = colors.black, bg = colors.white } },
-
-			inactive = {
-				a = { fg = colors.white, bg = colors.black },
-				b = { fg = colors.white, bg = colors.black },
-				c = { fg = colors.white },
-			},
-		}
-
-		require("lualine").setup({
-			options = {
-				theme = 'nordic',
-				component_separators = "",
-				section_separators = { left = "", right = "" },
-			},
-			sections = {
-				lualine_a = { { "mode", separator = { left = "", right = "" }, right_padding = 2 } },
-				lualine_b = {
-					{
-						"filename",
-						symbols = { newfile = "[NEW]", unnamed = "[NO NAME]", modified = "", readonly = "" },
-					},
-				},
-				lualine_c = {
-					"filesize",
-				},
-				lualine_x = { "encoding" },
-				lualine_y = { "filetype", "progress" },
-				lualine_z = {
-					{ "location", separator = { left = "", right = "" }, left_padding = 2 },
-				},
-			},
-			inactive_sections = {
-				lualine_a = { { "filename", separator = { left = "", right = "" } } },
-				lualine_b = {},
-				lualine_c = { "filesize" },
-				lualine_x = {},
-				lualine_y = { "filetype" },
-				lualine_z = { { "location", separator = { left = "", right = "" } } },
-			},
-			tabline = {
-				lualine_a = { { "hostname", separator = { left = "", right = "" }, right_padding = 2 } },
-				lualine_b = {
-					{
-						"filename",
-						symbols = { newfile = "[NEW]", unnamed = "[NO NAME]", modified = "", readonly = "" },
-						path = 3,
-					},
-				},
-				lualine_c = {},
-				lualine_x = {},
-				lualine_y = {
-					{
-						"branch",
-					},
-				},
-				lualine_z = {
-					{ "datetime", style = "iso", separator = { left = "", right = "" }, left_padding = 2 },
-				},
-			},
-			extensions = {},
-		})
-	end,
+    "nvim-lualine/lualine.nvim",
+    event = "VeryLazy",
+    opts = {
+        options = {
+            theme = bubbles_theme,
+            component_separators = "",
+            section_separators = { left = "", right = "" },
+            globalstatus = false, -- per-window statusline so inactive sections render
+        },
+        sections = {
+            lualine_a = {
+                { "mode", color = { gui = "bold" }, separator = { left = "", right = "" }, right_padding = 2 },
+            },
+            lualine_b = {
+                {
+                    "filename",
+                    symbols = { newfile = "[NEW]", unnamed = "[NO NAME]", modified = "", readonly = "" },
+                },
+            },
+            lualine_c = { "filesize" },
+            lualine_x = { "encoding" },
+            lualine_y = { "filetype", "progress" },
+            lualine_z = {
+                { "location", color = { gui = "bold" }, separator = { left = "", right = "" }, left_padding = 2 },
+            },
+        },
+        inactive_sections = {
+            lualine_a = {
+                { "filename", color = { gui = "bold" }, separator = { left = "", right = "" } },
+            },
+            lualine_b = {},
+            lualine_c = { "filesize" },
+            lualine_x = {},
+            lualine_y = { "filetype" },
+            lualine_z = {
+                { "location", color = { gui = "bold" }, separator = { left = "", right = "" } },
+            },
+        },
+        tabline = {
+            lualine_a = {
+                { "hostname", color = { gui = "bold" }, separator = { left = "", right = "" }, right_padding = 2 },
+            },
+            lualine_b = {
+                {
+                    "filename",
+                    symbols = { newfile = "[NEW]", unnamed = "[NO NAME]", modified = "", readonly = "" },
+                    path = 3,
+                },
+            },
+            lualine_c = {},
+            lualine_x = {},
+            lualine_y = { "branch" },
+            lualine_z = {
+                { "datetime", style = "iso", color = { gui = "bold" }, separator = { left = "", right = "" }, left_padding = 2 },
+            },
+        },
+        extensions = {},
+    },
 }
