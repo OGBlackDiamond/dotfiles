@@ -1,4 +1,12 @@
 return {
+    -- In-editor markdown rendering (headings, code blocks, tables, etc.)
+    -- snacks.nvim picker preview automatically uses this when installed
+    {
+        "MeanderingProgrammer/render-markdown.nvim",
+        ft = { "markdown" },
+        opts = {},
+    },
+
     -- Wakatime: automatic time tracking
     {
         "wakatime/vim-wakatime",

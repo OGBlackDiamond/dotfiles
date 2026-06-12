@@ -18,19 +18,6 @@ local function make_capabilities()
     return base
 end
 
--- Called when an LSP client attaches to a buffer
-local function on_attach(client, bufnr)
-    -- Format on save if the server supports it (client:method() syntax required in 0.12+)
-    if client:supports_method("textDocument/formatting") then
-        vim.api.nvim_create_autocmd("BufWritePre", {
-            buffer = bufnr,
-            callback = function()
-                vim.lsp.buf.format({ bufnr = bufnr, async = false })
-            end,
-        })
-    end
-end
-
 -- Global defaults applied to every server
 vim.lsp.config("*", {
     capabilities = make_capabilities(),
@@ -91,7 +78,18 @@ vim.lsp.config("gopls", {
 
 vim.lsp.config("bashls", {})
 
-
+-- jdtls: override cmd to use the Mason-installed wrapper.
+-- The built-in lspconfig config handles per-project -data workspace dirs
+-- automatically via its cmd function, so no FileType autocmd is needed.
+-- signatureHelp must be explicitly enabled in settings or jdtls returns empty signatures.
+vim.lsp.config("jdtls", {
+    cmd = { vim.fn.expand("~/.local/share/nvim/mason/bin/jdtls") },
+    settings = {
+        java = {
+            signatureHelp = { enabled = true },
+        },
+    },
+})
 
 return {
     -- 1. Mason: binary installer UI
@@ -124,13 +122,7 @@ return {
                 "bashls",
                 "jdtls",
             },
-            -- jdtls is excluded because it requires a dynamic per-project workspace
-            -- path in its cmd — it's started manually via a FileType autocmd above
-            --[[
-            automatic_enable = {
-                exclude = { "jdtls" },
-            },
-            --]]
+
         },
     },
 }

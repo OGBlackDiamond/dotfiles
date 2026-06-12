@@ -109,5 +109,5 @@ opt.list = true
 opt.shiftround = true
 opt.shortmess:append({ W = true, I = true, c = true, C = true })
 
-vim.g.autoformat = true
+vim.g.autoformat = false
 vim.g.markdown_recommended_style = 0

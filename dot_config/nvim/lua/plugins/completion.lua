@@ -42,6 +42,7 @@ return {
             keymap = {
                 preset = "default", -- inherit everything not overridden below
                 ["<C-j>"] = { "select_next", "fallback" },
+                ["<C-k>"] = { "select_prev", "fallback" },
                 ["<C-p>"] = { "select_prev", "fallback" },
                 ["<CR>"] = { "accept", "fallback" },
             },

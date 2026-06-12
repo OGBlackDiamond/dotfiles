@@ -1,0 +1,23 @@
+/* GTK4 libadwaita file chooser fixes */
+
+/* Fix sidebar icon visibility */
+.sidebar row image {
+    color: white;
+}
+
+/* Fix alternating row colors / pinstripes */
+listview row.striped {
+    background-color: transparent;
+    background-image: none;
+}
+columnview row.striped {
+    background-color: transparent;
+    background-image: none;
+}
+
+/* Fallback for older treeview structure just in case */
+treeview row:nth-child(even),
+treeview row:nth-child(odd) {
+    background-color: transparent;
+    background-image: none;
+}

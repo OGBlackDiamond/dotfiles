@@ -31,7 +31,7 @@ return {
     event = "VeryLazy",
     opts = {
         options = {
-            theme = bubbles_theme,
+            theme = 'nordic',
             component_separators = "",
             section_separators = { left = "", right = "" },
             globalstatus = false, -- per-window statusline so inactive sections render
