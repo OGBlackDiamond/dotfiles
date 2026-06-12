@@ -2,7 +2,6 @@
 fastfetch
 
 source ~/repos/zsh-autocomplete/zsh-autocomplete.plugin.zsh
-source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source ~/.aliases
 
 # The following lines were added by compinstall

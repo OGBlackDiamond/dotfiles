@@ -1,0 +1,116 @@
+local augroup = vim.api.nvim_create_augroup("user_config", { clear = true })
+
+-- close some filetypes with <q>
+vim.api.nvim_create_autocmd("FileType", {
+    group = augroup,
+    pattern = {
+        "PlenaryTestPopup",
+        "checkhealth",
+        "dbout",
+        "gitsigns-blame",
+        "grug-far",
+        "help",
+        "lspinfo",
+        "neotest-output",
+        "neotest-output-panel",
+        "neotest-summary",
+        "notify",
+        "qf",
+        "spectre_panel",
+        "startuptime",
+        "tsplayground",
+    },
+    callback = function(event)
+        vim.bo[event.buf].buflisted = false
+        vim.schedule(function()
+            vim.keymap.set("n", "q", function()
+                vim.cmd("close")
+                pcall(vim.api.nvim_buf_delete, event.buf, { force = true })
+            end, {
+                buffer = event.buf,
+                silent = true,
+                desc = "Quit buffer",
+            })
+        end)
+    end,
+})
+
+-- wrap and check for spell in text filetypes
+vim.api.nvim_create_autocmd("FileType", {
+    group = augroup,
+    pattern = { "text", "plaintex", "typst", "gitcommit", "markdown" },
+    callback = function()
+        vim.opt_local.wrap = true
+        vim.opt_local.spell = true
+    end,
+})
+
+-- Set filetype for .toml files
+vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+    group = augroup,
+    pattern = { "*.tomg-config*" },
+    callback = function()
+        vim.bo.filetype = "toml"
+    end,
+})
+
+-- Fix conceallevel for json files
+vim.api.nvim_create_autocmd({ "FileType" }, {
+    group = augroup,
+    pattern = { "json", "jsonc", "json5" },
+    callback = function()
+        vim.opt_local.conceallevel = 0
+    end,
+})
+
+-- Attach treesitter highlighting and auto-install missing parsers
+-- this is because treesitter doesn't auto-install anymore
+vim.api.nvim_create_autocmd("FileType", {
+    group = augroup,
+    callback = function(ev)
+        local ft = vim.bo[ev.buf].filetype
+        if ft == "" then
+            return
+        end
+
+        local ok_ts, ts = pcall(require, "nvim-treesitter")
+        local ok_cfg, cfg = pcall(require, "nvim-treesitter.config")
+        if not ok_ts or not ok_cfg then
+            return
+        end
+
+        local installed = cfg.get_installed()
+        if not vim.tbl_contains(installed, ft) then
+            ts.install({ ft })
+        end
+
+        -- Start highlighting; silently skip if parser unavailable
+        pcall(vim.treesitter.start, ev.buf)
+    end,
+})
+
+-- LSP keymaps (definitions live in keymaps.lua)
+vim.api.nvim_create_autocmd("LspAttach", {
+    group = augroup,
+    callback = function(ev)
+        LspKeymaps(ev.buf)
+    end,
+})
+
+-- go to last loc when opening a buffer
+vim.api.nvim_create_autocmd("BufReadPost", {
+    group = augroup,
+    callback = function(event)
+        local exclude = { "gitcommit" } -- don't remember position in commit messages
+        local buf = event.buf
+        local ft = vim.bo[buf].filetype
+        if vim.tbl_contains(exclude, ft) then
+            return
+        end
+        local mark = vim.api.nvim_buf_get_mark(buf, '"')
+        local lcount = vim.api.nvim_buf_line_count(buf)
+        if mark[1] > 0 and mark[1] <= lcount then
+            pcall(vim.api.nvim_win_set_cursor, 0, mark)
+        end
+    end,
+})
