@@ -1,5 +1,5 @@
 
-alias sys-up-down="sudo dnf upgrade --refresh -y && shutdown now"
+alias sys-up-down="sudo pacman -Syu --noconfirm && shutdown now"
 
 alias fix-arduino="sudo chmod a+rw /dev/ttyACM0"
 
