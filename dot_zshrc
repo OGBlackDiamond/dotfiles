@@ -1,24 +1,41 @@
 
 fastfetch
 
-source ~/repos/zsh-autocomplete/zsh-autocomplete.plugin.zsh
-source ~/.aliases
+# ============================================================================
+# Completion (native Zsh, no plugin)
+# ============================================================================
+# Populate LS_COLORS so completion lists can be colored.
+if (( $+commands[dircolors] )); then
+  eval "$(dircolors -b)"
+fi
 
-# The following lines were added by compinstall
+# Tab: insert the longest common prefix AND immediately show the full list of
+# matches (e.g. `ls D` stays at `D` and lists Desktop/Documents/Downloads;
+# `foo1`/`foo2` -> `foo` + list). Tab again to cycle through the matches.
+setopt no_auto_menu        # don't jump into a cycling menu on the first Tab
+setopt auto_list           # on an ambiguous Tab, immediately show the full list
+setopt complete_in_word    # allow completing in the middle of a word
+unsetopt menu_complete     # don't auto-insert the first match
+unsetopt list_ambiguous    # show the list even when a prefix can be inserted
 
-zstyle ':completion:*' completer _expand _complete _ignored _correct _approximate
-zstyle ':completion:*' file-sort access
-zstyle ':completion:*' group-name ''
-zstyle ':completion:*' insert-unambiguous true
-zstyle ':completion:*' list-colors ''
-zstyle ':completion:*' matcher-list 'r:|[._-]=** r:|=**' 'l:|=* r:|=*' ''
-zstyle ':completion:*' original true
-zstyle ':completion:*' use-compctl true
-zstyle :compinstall filename '/home/caden/.zshrc'
-
+# Load and initialize the completion system.
 autoload -Uz compinit
 compinit
-# End of lines added by compinstall
+
+# Tab -> complete-word (insert common prefix / list on repeat). This is
+# preferable to the default `expand-or-complete`, which also does glob
+# expansion and can surprise you (e.g. mangling `~/`).
+bindkey '^I' complete-word
+
+zstyle ':completion:*' group-name ''
+# Color completion entries like `ls` does (uses $LS_COLORS, set above).
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+# Case-SENSITIVE matching; only hyphen/underscore/dot are treated loosely.
+zstyle ':completion:*' matcher-list 'r:|[._-]=* r:|=*'
+# Describe option groups in the completion list.
+zstyle ':completion:*:descriptions' format '%B%d%b'
+
+source ~/.aliases
 # Lines configured by zsh-newuser-install
 HISTFILE=~/.histfile
 HISTSIZE=1000
@@ -26,10 +43,11 @@ SAVEHIST=1000
 setopt extendedglob
 #bindkey -v
 # End of lines configured by zsh-newuser-install
-source ~/repos/powerlevel10k/powerlevel10k.zsh-theme
+# Powerlevel10k theme, installed via AUR: `zsh-theme-powerlevel10k`.
+source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/repos/powerlevel10k/.p10k.zsh ]] || source ~/repos/powerlevel10k/.p10k.zsh
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 path+=("/usr/bin/java")
 path+=("/data/bin")

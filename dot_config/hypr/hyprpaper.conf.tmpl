@@ -1,0 +1,16 @@
+preload = ~/.config/hypr/tron2.png
+{{ if eq .chezmoi.hostname "zaku" -}}
+wallpaper {
+	monitor = DP-3
+	path = ~/.config/hypr/tron2.png
+}
+wallpaper {
+	monitor = HDMI-A-1
+	path = ~/.config/hypr/tron2.png
+}
+{{ else -}}
+wallpaper {
+	monitor =
+	path = ~/.config/hypr/tron2.png
+}
+{{ end -}}

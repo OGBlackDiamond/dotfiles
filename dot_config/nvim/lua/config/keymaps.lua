@@ -9,15 +9,6 @@ map("n", "<leader>bb", "<cmd>e #<cr>", { desc = "Switch to Other Buffer" })
 map("n", "<leader>t", ":vsplit<CR>", { desc = "Vertical Split" })
 map("n", "<leader>T", ":10split<CR><C-w>j:term<CR>i", { desc = "Terminal Split" })
 
--- Auto closing pairs
-map("i", "`", "``<left>")
-map("i", '"', '""<left>')
-map("i", "(", "()<left>")
-map("i", "[", "[]<left>")
-map("i", "{", "{}<left>")
-map("i", "<", "<><left>")
-map("i", "'", "''<left>")
-
 map("t", "<esc><esc>", "<c-\\><c-n>", { desc = "Enter Normal Mode" })
 
 map("n", "<leader>j", vim.diagnostic.open_float, { desc = "Line Diagnostics" })

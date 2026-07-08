@@ -40,6 +40,7 @@ opt.synmaxcol = 300
 opt.ruler = false
 opt.virtualedit = "block"
 opt.winminwidth = 5
+opt.equalalways = false
 
 -- File handling
 opt.backup = false
