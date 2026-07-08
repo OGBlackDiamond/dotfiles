@@ -69,7 +69,8 @@ vim.api.nvim_create_autocmd("FileType", {
     group = augroup,
     callback = function(ev)
         local ft = vim.bo[ev.buf].filetype
-        if ft == "" then
+        local ignored_fts = { snacks_notif = true, snacks_input = true, snacks_picker = true, mason = true }
+        if ft == "" or ignored_fts[ft] then
             return
         end
 
@@ -94,6 +95,29 @@ vim.api.nvim_create_autocmd("LspAttach", {
     group = augroup,
     callback = function(ev)
         LspKeymaps(ev.buf)
+    end,
+})
+
+-- blink.cmp can leave the signature-help active-parameter highlight visible
+-- after leaving insert mode; force-close it when returning to normal mode.
+vim.api.nvim_create_autocmd("InsertLeave", {
+    group = augroup,
+    callback = function()
+        local ok, cmp = pcall(require, "blink.cmp")
+        if ok then
+            cmp.hide_signature()
+        end
+    end,
+})
+
+vim.api.nvim_create_autocmd("ModeChanged", {
+    group = augroup,
+    pattern = "i:n",
+    callback = function()
+        local ok, cmp = pcall(require, "blink.cmp")
+        if ok then
+            cmp.hide_signature()
+        end
     end,
 })
 

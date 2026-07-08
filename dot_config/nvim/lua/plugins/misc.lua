@@ -7,6 +7,13 @@ return {
         opts = {},
     },
 
+    -- Paired delimiters without custom mappings that interfere with bit shifts.
+    {
+        "windwp/nvim-autopairs",
+        event = "InsertEnter",
+        opts = {},
+    },
+
     -- Wakatime: automatic time tracking
     {
         "wakatime/vim-wakatime",
