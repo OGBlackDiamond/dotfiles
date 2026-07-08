@@ -1,0 +1,53 @@
+#!/bin/sh
+
+left_display='Dell Inc. DELL U2424HE 2QCB4X3'
+right_display='Dell Inc. DELL U2424HE 8NCB4X3'
+state_file="${XDG_RUNTIME_DIR:-/tmp}/hypr-dock-monitors.state"
+
+monitor_block() {
+  printf '%s\n' "$1" | sed -n "/^Monitor $2 /,/^$/p"
+}
+
+apply_layout() {
+  monitors=$(hyprctl monitors)
+
+  if printf '%s\n' "$monitors" | grep -Fq "$left_display" && printf '%s\n' "$monitors" | grep -Fq "$right_display"; then
+    state=docked
+  else
+    state=laptop
+  fi
+
+  previous_state=
+  [ -f "$state_file" ] && previous_state=$(cat "$state_file")
+
+  printf '%s\n' "$state" >"$state_file"
+
+  if [ "$state" = docked ]; then
+    all_monitors=$(hyprctl monitors all)
+    if [ "$1" = --force ] || ! monitor_block "$all_monitors" eDP-1 | grep -q 'disabled: true'; then
+      hyprctl eval "hl.monitor({output='desc:$left_display', mode='1920x1080@120', position='1920x0', scale=1})" >/dev/null
+      hyprctl eval "hl.monitor({output='desc:$right_display', mode='1920x1080@120', position='3840x0', scale=1})" >/dev/null
+      hyprctl eval "hl.monitor({output='eDP-1', disabled=true})" >/dev/null
+    fi
+  else
+    hyprctl eval "hl.monitor({output='eDP-1', mode='preferred', position='0x0', scale=1, disabled=false})" >/dev/null
+    hyprctl reload >/dev/null
+    sleep 0.5
+    hyprctl eval "hl.monitor({output='eDP-1', mode='preferred', position='0x0', scale=1})" >/dev/null
+    hyprctl dispatch dpms on eDP-1 >/dev/null 2>&1 || true
+    hyprctl dispatch focusmonitor eDP-1 >/dev/null 2>&1 || true
+  fi
+
+  if [ "$1" = --force ] || [ "$previous_state" != "$state" ]; then
+    pkill -SIGUSR2 waybar 2>/dev/null || true
+  fi
+}
+
+if [ "$1" = --watch ]; then
+  apply_layout --force
+  while sleep 2; do
+    apply_layout
+  done
+else
+  apply_layout "$1"
+fi
