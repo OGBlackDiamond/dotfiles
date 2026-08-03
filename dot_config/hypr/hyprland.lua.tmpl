@@ -25,25 +25,19 @@ for i = 5, 8 do
 end
 {{ else if eq .chezmoi.hostname "gameboy" -}}
 hl.monitor({
-    output   = "eDP-1",
-    mode     = "1920x1080@60",
-    position = "0x0",
+    output   = "",
+    mode     = "preferred",
+    position = "auto",
     scale    = "1",
 })
-for i = 1, 5 do
-    hl.workspace_rule({ workspace = i, monitor = "eDP-1" })
-end
-{{ else if eq .chezmoi.hostname "gameboy-advance" -}}
-hl.monitor({
-    output   = "eDP-1",
-    mode     = "3840x2160",
-    position = "0x0",
-    scale    = "2",
-})
-for i = 1, 5 do
-    hl.workspace_rule({ workspace = i, monitor = "eDP-1" })
-end
-{{ end -}}
+local dockMonitorScript = "/home/caden/bin/hypr-dock-monitors"
+hl.on("monitor.added", function()
+    hl.exec_cmd("sh -lc 'sleep 1; " .. dockMonitorScript .. "'")
+end)
+hl.on("monitor.removed", function()
+    hl.exec_cmd("sh -lc 'sleep 1; " .. dockMonitorScript .. "'")
+end)
+{{ end }}
 ---------------------
 ---- MY PROGRAMS ----
 ---------------------
@@ -64,6 +58,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("waybar")
     hl.exec_cmd("udiskie")
     hl.exec_cmd("hypridle")
+    hl.exec_cmd("sh -lc 'case \"$(uname -n)\" in *gameboy*) pkill -x kanshi 2>/dev/null; sleep 2; pgrep -f \"[h]ypr-dock-monitors --watch\" >/dev/null || setsid -f " .. dockMonitorScript .. " --watch >/tmp/hypr-dock-monitors.log 2>&1 ;; esac'")
     hl.exec_cmd("fcitx5 -d")
 end)
 -------------------------------

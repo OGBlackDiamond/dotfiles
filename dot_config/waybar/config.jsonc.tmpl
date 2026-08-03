@@ -3,6 +3,8 @@
   "position": "top",
   {{ if eq .chezmoi.hostname "zaku"}}
   "output": ["DP-3"],
+  {{ else if contains "gameboy" .chezmoi.hostname }}
+  "output": ["DP-4", "DP-5", "eDP-1"],
   {{ else }}
   "output": ["eDP-1"],
   {{ end }}
