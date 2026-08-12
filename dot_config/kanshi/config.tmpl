@@ -1,4 +1,4 @@
-{{- if contains "gameboy" .chezmoi.hostname -}}
+{{- if eq .machineType "laptop" -}}
 profile laptop {
     output eDP-1 enable mode 1920x1080@59.98Hz position 0,0 scale 1
     exec hyprctl keyword monitor eDP-1,preferred,auto,1

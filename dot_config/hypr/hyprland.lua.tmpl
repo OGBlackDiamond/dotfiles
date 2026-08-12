@@ -23,7 +23,7 @@ end
 for i = 5, 8 do
     hl.workspace_rule({ workspace = i, monitor = "HDMI-A-1" })
 end
-{{ else if eq .chezmoi.hostname "gameboy" -}}
+{{ else if eq .machineType "laptop" -}}
 hl.monitor({
     output   = "",
     mode     = "preferred",
@@ -58,7 +58,9 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("waybar")
     hl.exec_cmd("udiskie")
     hl.exec_cmd("hypridle")
-    hl.exec_cmd("sh -lc 'case \"$(uname -n)\" in *gameboy*) pkill -x kanshi 2>/dev/null; sleep 2; pgrep -f \"[h]ypr-dock-monitors --watch\" >/dev/null || setsid -f " .. dockMonitorScript .. " --watch >/tmp/hypr-dock-monitors.log 2>&1 ;; esac'")
+{{ if eq .machineType "laptop" }}
+    hl.exec_cmd("sh -lc 'pkill -x kanshi 2>/dev/null; sleep 2; pgrep -f \"[h]ypr-dock-monitors --watch\" >/dev/null || setsid -f " .. dockMonitorScript .. " --watch >/tmp/hypr-dock-monitors.log 2>&1'")
+{{ end }}
     hl.exec_cmd("fcitx5 -d")
 end)
 -------------------------------
