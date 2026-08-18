@@ -2,6 +2,33 @@
 -- Replaces: nvim-cmp + cmp-nvim-lsp + cmp-buffer + cmp-path + LuaSnip + cmp_luasnip
 -- Uses native vim.snippet for snippet expansion (no LuaSnip needed)
 
+local function completion_visible_in_context()
+    local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+    local ts_col = math.max(col - 1, 0)
+
+    local ok_captures, captures = pcall(vim.treesitter.get_captures_at_pos, 0, row - 1, ts_col)
+    if ok_captures then
+        for _, capture in ipairs(captures) do
+            if capture.capture:find("comment") or capture.capture:find("string") then
+                return false
+            end
+        end
+    end
+
+    local ok_node, node = pcall(vim.treesitter.get_node, { pos = { row - 1, ts_col } })
+    while ok_node and node do
+        local node_type = node:type()
+        if node_type:find("comment") or node_type:find("string") then
+            return false
+        end
+        node = node:parent()
+    end
+
+    local syntax_col = math.max(col, 1)
+    local syntax_group = vim.fn.synIDattr(vim.fn.synID(row, syntax_col, true), "name"):lower()
+    return syntax_group:find("comment") == nil and syntax_group:find("string") == nil
+end
+
 return {
     {
         "saghen/blink.cmp",
@@ -57,6 +84,9 @@ return {
 
             completion = {
                 menu = {
+                    auto_show = function()
+                        return completion_visible_in_context()
+                    end,
                     -- border inherited from vim.o.winborder
                     scrollbar = false,
                     draw = {
@@ -70,7 +100,11 @@ return {
                 accept = {
                     auto_brackets = { enabled = true }, -- inserts () after accepting a function
                 },
-                ghost_text = { enabled = true },        -- inline preview of top suggestion
+                ghost_text = {
+                    enabled = function()
+                        return completion_visible_in_context()
+                    end,
+                }, -- inline preview of top suggestion
             },
 
             signature = {
