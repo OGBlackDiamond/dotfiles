@@ -28,4 +28,7 @@ function LspKeymaps(bufnr)
     lmap("<leader>rn", vim.lsp.buf.rename, "Rename Symbol")
     lmap("<leader>f", function() vim.lsp.buf.format({ async = true }) end, "Format Buffer")
     lmap("<leader>k", vim.lsp.buf.hover, "Hover Docs")
+    lmap("<leader>th", function()
+        vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
+    end, "Toggle Inlay Hints")
 end
