@@ -1,6 +1,6 @@
 -- Completion: blink.cmp v1 (stable)
--- Replaces: nvim-cmp + cmp-nvim-lsp + cmp-buffer + cmp-path + LuaSnip + cmp_luasnip
--- Uses native vim.snippet for snippet expansion (no LuaSnip needed)
+-- Replaces: nvim-cmp + cmp-nvim-lsp + cmp-buffer + cmp-path + cmp_luasnip
+-- Uses LuaSnip for snippet expansion/navigation to avoid native vim.snippet placeholder quirks.
 
 local function completion_visible_in_context()
     local row, col = unpack(vim.api.nvim_win_get_cursor(0))
@@ -34,6 +34,7 @@ return {
         "saghen/blink.cmp",
         version = "1.*",                    -- pins to v1 stable; downloads pre-built binary (no Rust needed)
         dependencies = {
+            { "L3MON4D3/LuaSnip", version = "v2.*" },
             "rafamadriz/friendly-snippets", -- large collection of pre-written snippets
         },
         config = function(_, opts)
@@ -76,6 +77,10 @@ return {
 
             appearance = {
                 nerd_font_variant = "normal",
+            },
+
+            snippets = {
+                preset = "luasnip",
             },
 
             sources = {
