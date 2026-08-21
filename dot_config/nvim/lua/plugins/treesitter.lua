@@ -36,6 +36,7 @@ return {
                 "markdown",
                 "markdown_inline",
                 "python",
+                "qmljs",
                 "query",
                 "typescript",
                 "javascript",

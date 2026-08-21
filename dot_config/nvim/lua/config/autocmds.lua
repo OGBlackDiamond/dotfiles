@@ -1,5 +1,16 @@
 local augroup = vim.api.nvim_create_augroup("user_config", { clear = true })
 
+vim.filetype.add({
+    extension = {
+        qml = "qml",
+    },
+    pattern = {
+        [".*/quickshell/.*%.qml"] = "qml",
+    },
+})
+
+pcall(vim.treesitter.language.register, "qmljs", "qml")
+
 -- close some filetypes with <q>
 vim.api.nvim_create_autocmd("FileType", {
     group = augroup,
@@ -80,13 +91,17 @@ vim.api.nvim_create_autocmd("FileType", {
             return
         end
 
+        local parser_by_ft = {
+            qml = "qmljs",
+        }
+        local parser = parser_by_ft[ft] or ft
         local installed = cfg.get_installed()
-        if not vim.tbl_contains(installed, ft) then
-            ts.install({ ft })
+        if not vim.tbl_contains(installed, parser) then
+            ts.install({ parser })
         end
 
         -- Start highlighting; silently skip if parser unavailable
-        pcall(vim.treesitter.start, ev.buf)
+        pcall(vim.treesitter.start, ev.buf, parser)
     end,
 })
 

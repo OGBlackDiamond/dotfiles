@@ -47,6 +47,20 @@ vim.lsp.config("ts_ls", {
     },
 })
 
+vim.lsp.config("qmlls", {
+    cmd = { "/usr/lib/qt6/bin/qmlls" },
+    filetypes = { "qml" },
+    root_markers = { ".qmlls.ini", "shell.qml" },
+    cmd_env = {
+        QML2_IMPORT_PATH = "/usr/lib/qt6/qml",
+        QML_IMPORT_PATH = "/usr/lib/qt6/qml",
+    },
+})
+
+if vim.fn.executable("/usr/lib/qt6/bin/qmlls") == 1 then
+    vim.lsp.enable("qmlls")
+end
+
 vim.lsp.config("pyright", {
     settings = {
         python = {
