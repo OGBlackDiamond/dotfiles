@@ -14,6 +14,14 @@ return {
         opts = {},
     },
 
+    -- Surround text objects with delimiters, tags, or quotes.
+    {
+        "kylechui/nvim-surround",
+        version = "*",
+        event = "VeryLazy",
+        opts = {},
+    },
+
     -- Wakatime: automatic time tracking
     {
         "wakatime/vim-wakatime",
