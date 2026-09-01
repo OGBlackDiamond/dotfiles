@@ -3,6 +3,8 @@ alias sys-up-down="sudo pacman -Syu --noconfirm && shutdown now"
 
 alias fix-arduino="sudo chmod a+rw /dev/ttyACM0"
 
+alias fix-esp="sudo chmod a+rw /dev/ttyUSB0"
+
 alias cmd-screensaver="bash ~/bin/cmd-screensaver"
 
 alias launch-screensaver="bash ~/bin/launch-screensaver"
