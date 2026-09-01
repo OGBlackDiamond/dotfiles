@@ -2,6 +2,8 @@ local map = vim.keymap.set
 
 vim.g.mapleader = " "
 
+map({ "n", "i", "v", "x" }, "<F1>", "<Nop>", { desc = "Disable help" })
+
 map("n", "<leader><Tab>", ":bnext<CR>", { desc = "Next buffer" })
 map("n", "<leader><S-Tab>", ":bprevious<CR>", { desc = "Previous buffer" })
 map("n", "<leader>bb", "<cmd>e #<cr>", { desc = "Switch to Other Buffer" })

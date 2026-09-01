@@ -133,6 +133,7 @@ return {
                 "pyright",
                 "clangd",
                 "gopls",
+                "rust_analyzer",
                 "bashls",
                 "jdtls",
             },
