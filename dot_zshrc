@@ -1,5 +1,7 @@
 
-fastfetch
+if (( $+commands[fastfetch] )); then
+  fastfetch
+fi
 
 # ============================================================================
 # Completion (native Zsh, no plugin)
@@ -44,7 +46,7 @@ setopt extendedglob
 #bindkey -v
 # End of lines configured by zsh-newuser-install
 # Powerlevel10k theme, installed via AUR: `zsh-theme-powerlevel10k`.
-source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
+[[ -r /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme ]] && source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh

@@ -1,5 +1,7 @@
 # .bashrc
 
+screenfetch
+
 # Source global definitions
 if [ -f /etc/bashrc ]; then
     . /etc/bashrc
@@ -33,6 +35,12 @@ export SDKMAN_DIR="$HOME/.sdkman"
 parse_git_branch() {
   git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
 }
+
+
+if [ -n "$CONTAINER_ID" ]; then
+    # only runs inside a distrobox container
+    source /opt/ros/jazzy/setup.bash
+fi
 
 export EDITOR="vim"
 
