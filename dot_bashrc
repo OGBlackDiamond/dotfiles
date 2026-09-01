@@ -39,7 +39,7 @@ parse_git_branch() {
 
 if [ -n "$CONTAINER_ID" ]; then
     # only runs inside a distrobox container
-    export ROS_DOMAIN_ID=67
+    export ROS_DOMAIN_ID=43
     source /opt/ros/jazzy/setup.bash
 fi
 
