@@ -71,6 +71,7 @@ return {
                 preset = "default", -- inherit everything not overridden below
                 ["<C-j>"] = { "select_next", "fallback" },
                 ["<C-k>"] = { "select_prev", "fallback" },
+                ["<C-l>"] = { "show", "show_documentation", "hide_documentation" },
                 ["<C-p>"] = { "select_prev", "fallback" },
                 ["<CR>"] = { "accept", "fallback" },
             },
