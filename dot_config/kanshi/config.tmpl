@@ -1,16 +1,22 @@
 {{- $machineType := index . "machineType" | default "desktop" -}}
 {{- if eq $machineType "laptop" -}}
-profile laptop {
-    output eDP-1 enable mode 1920x1080@59.98Hz position 0,0 scale 1
-    exec hyprctl keyword monitor eDP-1,preferred,auto,1
-    exec hyprctl reload
-    exec pkill -SIGUSR2 waybar
-}
-
 profile docked {
     output eDP-1 disable
-    output DP-7 enable mode 1920x1080@60Hz position 1920,0 scale 1
-    output DP-5 enable mode 1920x1080@60Hz position 3840,0 scale 1
-    exec pkill -SIGUSR2 waybar
+    output "Dell Inc. DELL U2424HE 2QCB4X3" enable mode 1920x1080@120Hz position 1920,0 scale 1
+    output "Dell Inc. DELL U2424HE 8NCB4X3" enable mode 1920x1080@120Hz position 3840,0 scale 1
+}
+
+profile docked-left {
+    output eDP-1 disable
+    output "Dell Inc. DELL U2424HE 2QCB4X3" enable mode 1920x1080@120Hz position 1920,0 scale 1
+}
+
+profile docked-right {
+    output eDP-1 disable
+    output "Dell Inc. DELL U2424HE 8NCB4X3" enable mode 1920x1080@120Hz position 3840,0 scale 1
+}
+
+profile laptop {
+    output eDP-1 enable mode preferred position 0,0 scale 1
 }
 {{- end }}

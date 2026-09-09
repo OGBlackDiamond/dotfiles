@@ -1,0 +1,5 @@
+#!/bin/bash
+
+while IFS= read -r pid; do
+  kill "$pid"
+done < <(hyprctl clients -j | jq -r '.[] | select(.class == "Screensaver") | .pid')

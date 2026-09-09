@@ -31,13 +31,6 @@ hl.monitor({
     position = "auto",
     scale    = "1",
 })
-local dockMonitorScript = "/home/caden/bin/hypr-dock-monitors"
-hl.on("monitor.added", function()
-    hl.exec_cmd("sh -lc 'sleep 1; " .. dockMonitorScript .. "'")
-end)
-hl.on("monitor.removed", function()
-    hl.exec_cmd("sh -lc 'sleep 1; " .. dockMonitorScript .. "'")
-end)
 {{ end }}
 ---------------------
 ---- MY PROGRAMS ----
@@ -52,16 +45,16 @@ local browser     = "firefox"
 -- See https://wiki.hypr.land/Configuring/Basics/Autostart/
 hl.on("hyprland.start", function()
     hl.exec_cmd("dbus-update-activation-environment --systemd --all")
+    hl.exec_cmd("/usr/lib/pam_kwallet_init")
     hl.exec_cmd("systemctl --user start hyprpolkitagent")
     hl.exec_cmd("swaync")
     hl.exec_cmd("sh -lc 'command -v swayosd-server >/dev/null 2>&1 && swayosd-server'")
-    hl.exec_cmd("kwalletd6")
     hl.exec_cmd("hyprpaper")
-    hl.exec_cmd("waybar")
+    hl.exec_cmd("sh -lc 'sleep 1; exec /usr/bin/quickshell --no-duplicate >/tmp/quickshell.log 2>&1'")
     hl.exec_cmd("udiskie")
     hl.exec_cmd("hypridle")
 {{ if eq $machineType "laptop" }}
-    hl.exec_cmd("sh -lc 'pkill -x kanshi 2>/dev/null; sleep 2; pgrep -f \"[h]ypr-dock-monitors --watch\" >/dev/null || setsid -f " .. dockMonitorScript .. " --watch >/tmp/hypr-dock-monitors.log 2>&1'")
+    hl.exec_cmd("/usr/bin/kanshi")
 {{ end }}
     hl.exec_cmd("fcitx5 -d")
 end)

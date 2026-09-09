@@ -1,29 +1,29 @@
 #!/bin/bash
 
+export PATH="$HOME/.local/bin:$PATH"
+
 screensaver_in_focus() {
   hyprctl activewindow -j | jq -e '.class == "Screensaver"' >/dev/null 2>&1
 }
 
 exit_screensaver() {
-  hyprctl keyword cursor:invisible false
-  pkill -x tte 2>/dev/null
-  pkill -f "kitty --class Screensaver" 2>/dev/null
+  kill "$tte_pid" 2>/dev/null
+  "$HOME/bin/stop-screensaver" &
   exit 0
 }
 
-
 trap exit_screensaver SIGINT SIGTERM SIGHUP SIGQUIT
 
-hyprctl keyword cursor:invisible true &>/dev/null
+tty=$(tty 2>/dev/null)
 
 while true; do
-  effect=$(tte 2>&1 | grep -oP '{\K[^}]+' | tr ',' ' ' | tr ' ' '\n' | sed -n '/^beams$/,$p' | sort -u | shuf -n1)
-  tte -i ~/.config/hypr/screensaver.txt \
-    --frame-rate 240 --canvas-width 0 --canvas-height $(($(tput lines) - 2)) --anchor-canvas c --anchor-text c \
-    "$effect" &
+  tte -i ~/.config/hypr/screensaver.txt --random-effect \
+    --frame-rate 240 --canvas-width 0 --canvas-height 0 --anchor-canvas c --anchor-text c \
+    --reuse-canvas --no-eol --no-restore-cursor &
+  tte_pid=$!
 
-  while pgrep -x tte >/dev/null; do
-    if read -n 1 -t 3 || ! screensaver_in_focus; then
+  while pgrep -t "${tty#/dev/}" -x tte >/dev/null; do
+    if read -rsn1 -t 1 || ! screensaver_in_focus; then
       exit_screensaver
     fi
   done

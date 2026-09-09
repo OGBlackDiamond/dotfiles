@@ -1,26 +1,48 @@
 #!/bin/bash
 
+export PATH="$HOME/.local/bin:$PATH"
+
 # Exit early if we don't have the tte show
 if ! command -v tte &>/dev/null; then
-  exit 1
+    exit 1
 fi
 
-# Exit early if screensave is already running
-pgrep -f "kitty --class Screensaver" && exit 0
+# Exit early if a screensaver window is already running.
+hyprctl clients -j | jq -e 'any(.[]; .class == "Screensaver")' >/dev/null && exit 0
 
 # Allow screensaver to be turned off but also force started
 #if [[ -f ~/.local/state/omarchy/toggles/screensaver-off ]] && [[ $1 != "force" ]]; then
 #  exit 1
 #fi
 
-focused=$(hyprctl monitors -j | jq -r '.[] | select(.focused == true).name')
+focused_monitor=$(hyprctl monitors -j | jq -r '.[] | select(.focused == true).name')
+socket="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
 
-for m in $(hyprctl monitors -j | jq -r '.[] | .name'); do
-  hyprctl dispatch focusmonitor $m
+if command -v socat &>/dev/null && [[ -S "$socket" ]]; then
+  exec {events}< <(socat -U - "UNIX-CONNECT:$socket" 2>/dev/null)
+fi
 
-  # FIXME: Find a way to make this generic where we it can work for kitty + ghostty
-  hyprctl dispatch exec "bash -lc 'kitty --class Screensaver --config ~/.config/kitty/screensaver.conf -e cmd-screensaver'"
-    #--config ~/.config/kitty/screensaver.toml \
-done
+focus_monitor() {
+  local monitor_lua
+  monitor_lua=$(printf '%s' "$1" | jq -Rs .)
+  hyprctl eval "hl.dispatch(hl.dsp.focus({ monitor = $monitor_lua }))" >/dev/null
+}
 
-hyprctl dispatch focusmonitor $focused
+wait_for_screensaver() {
+  local line deadline=$((SECONDS + 5))
+
+  [[ -v events ]] || return 0
+
+  while ((SECONDS < deadline)) && IFS= read -r -t $((deadline - SECONDS)) -u "$events" line; do
+    [[ $line == openwindow\>\>*,Screensaver,* ]] && return 0
+  done
+}
+
+while IFS= read -r monitor; do
+  monitor_lua=$(printf '%s' "$monitor" | jq -Rs .)
+  focus_monitor "$monitor"
+  hyprctl eval "hl.dispatch(hl.dsp.exec_cmd('kitty --class Screensaver --config ~/.config/kitty/screensaver.conf -e ~/bin/cmd-screensaver', { monitor = $monitor_lua, fullscreen = true }))" >/dev/null
+  wait_for_screensaver
+done < <(hyprctl monitors -j | jq -r '.[] | select(.disabled == false).name')
+
+focus_monitor "$focused_monitor"
