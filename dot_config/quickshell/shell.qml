@@ -66,6 +66,9 @@ ShellRoot {
     property string memoryUsage: "--"
     property string downloadRate: "--"
     property string uploadRate: "--"
+    property real previousRxBytes: -1
+    property real previousTxBytes: -1
+    property double previousNetworkSampleMs: 0
     property string volume: "--"
     property bool muted: false
     property bool hasNotifications: false
@@ -90,16 +93,30 @@ ShellRoot {
 
     Process {
       id: networkProbe
-      command: ["sh", "-c", "stats() { awk -F '[: ]+' '$1 != \"lo\" { rx += $2; tx += $10 } END { print rx, tx }' /proc/net/dev; }; set -- $(stats); rx1=$1; tx1=$2; sleep 0.5; set -- $(stats); awk -v rx1=\"$rx1\" -v tx1=\"$tx1\" -v rx2=\"$1\" -v tx2=\"$2\" 'function rate(bytes, value) { value = bytes * 2 / 1024; return value >= 1024 ? sprintf(\"%.1fM\", value / 1024) : sprintf(\"%.0fK\", value) } BEGIN { print rate(rx2-rx1), rate(tx2-tx1) }'"]
+      command: ["sh", "-c", "awk -F ':' 'NR > 2 { gsub(/^[[:space:]]+/, \"\", $1); gsub(/^[[:space:]]+/, \"\", $2); if ($1 != \"lo\") { split($2, fields, /[[:space:]]+/); rx += fields[1]; tx += fields[9] } } END { print rx, tx }' /proc/net/dev"]
       stdout: StdioCollector {
         onStreamFinished: {
-          const rates = this.text.trim().split(" ")
-          if (rates.length === 2) {
-            bar.downloadRate = rates[0]
-            bar.uploadRate = rates[1]
+          const counters = this.text.trim().split(" ")
+          const now = Date.now()
+          if (counters.length === 2 && bar.previousNetworkSampleMs > 0) {
+            const seconds = (now - bar.previousNetworkSampleMs) / 1000
+            const downBytesPerSecond = (Number(counters[0]) - bar.previousRxBytes) / seconds
+            const upBytesPerSecond = (Number(counters[1]) - bar.previousTxBytes) / seconds
+            bar.downloadRate = bar.formatNetworkRate(downBytesPerSecond)
+            bar.uploadRate = bar.formatNetworkRate(upBytesPerSecond)
           }
+          bar.previousRxBytes = Number(counters[0])
+          bar.previousTxBytes = Number(counters[1])
+          bar.previousNetworkSampleMs = now
         }
       }
+    }
+
+    function formatNetworkRate(bytesPerSecond) {
+      const kilobytesPerSecond = Math.max(0, bytesPerSecond) / 1000
+      return kilobytesPerSecond >= 1000
+        ? `${(kilobytesPerSecond / 1000).toFixed(1)}M`
+        : `${Math.round(kilobytesPerSecond)}K`
     }
 
     Process {
