@@ -241,6 +241,7 @@ ShellRoot {
         anchors.centerIn: parent
         text: Qt.formatDateTime(root.now, "HH:mm:ss")
         color: "#fab489"
+        font.pixelSize: 16
       }
       MouseArea {
         anchors.fill: parent
@@ -488,7 +489,7 @@ ShellRoot {
               columnSpacing: 8
               rowSpacing: 8
               Repeater {
-                model: ["M", "T", "W", "T", "F", "S", "S"]
+                model: ["S", "M", "T", "W", "T", "F", "S"]
                 delegate: BarLabel {
                   required property var modelData
                   width: 28
@@ -503,7 +504,7 @@ ShellRoot {
                   required property int index
                   property date today: root.now
                   property int firstDay: new Date(today.getFullYear(), today.getMonth(), 1).getDay()
-                  property int day: index - ((firstDay + 6) % 7) + 1
+                  property int day: index - firstDay + 1
                   property int monthDays: new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
                   width: 28
                   height: 28
