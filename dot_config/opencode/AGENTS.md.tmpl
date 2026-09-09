@@ -1,0 +1,39 @@
+# Global System Context
+
+This file is generated and managed by chezmoi. It is public-safe by design.
+
+## System
+
+- Operating system: {{ or .chezmoi.osRelease.prettyName .chezmoi.os }}
+- Architecture: {{ .chezmoi.arch }}
+- Kernel: {{ .chezmoi.kernel.ostype }} {{ .chezmoi.kernel.osrelease }}
+- Machine type: {{ .machineType }}
+- Desktop session at template render: {{ output "sh" "-c" "printf '%s' \"${XDG_CURRENT_DESKTOP:-not detected}\"" }}
+- Shell: Zsh
+- Package management: pacman, with yay available on Arch-based systems
+
+## Development Stack
+
+- Primary editor: Neovim
+- Version control: Git
+- Languages and runtimes commonly available: Java, C++, Go, Python, Rust, Lua, Node.js, and C#
+- Desktop configuration: Hyprland-oriented dotfiles, including Waybar, Kitty, Ghostty, and Quickshell
+- AI tooling: OpenCode, with local Ollama and GitHub Copilot providers configured
+
+## Working Preferences
+
+- Caden generally uses agentic AI for research, explanation, and intelligent search.
+- Do not directly edit code unless Caden explicitly asks for implementation or a concrete change.
+- Before using personal preferences, project context, or previous decisions, load the `get_memory` skill when relevant.
+- When durable public-safe context emerges, use the `add_memory` skill. Do not record transient session details.
+
+## Configuration Management
+
+- Manage configuration changes with chezmoi. Before editing a configuration file, check whether it is managed with `chezmoi source-path <target>`.
+- For a managed file, edit its chezmoi source rather than only its deployed target, then apply the targeted change with `chezmoi apply <target>` and verify it with `chezmoi diff <target>`.
+- When Caden asks to change an unmanaged, non-sensitive configuration file, add it to chezmoi as part of the change. Inspect it first to ensure it contains no secrets or other private data, then use `chezmoi add <target>` and make subsequent edits in the generated source file.
+- Do not add credentials, tokens, private keys, network details, or other confidential files to chezmoi.
+
+## Privacy Boundary
+
+This file is tracked in a public chezmoi repository. Never add credentials, API keys, tokens, passwords, private keys, IP addresses, hostnames, network topology, physical locations, contact details, family or friend information, private repository details, or other confidential data. Keep system context general and non-identifying.
