@@ -26,6 +26,13 @@ ShellRoot {
                        || null
   property var battery: UPower.devices.values.find(device => device.isLaptopBattery) || null
 
+  function batteryGlyph(battery) {
+    const level = Math.min(9, Math.max(0, Math.floor(battery.percentage * 10)))
+    const discharging = ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"]
+    const charging = ["󰢜", "󰂆", "󰂇", "󰂈", "󰢝", "󰂉", "󰢞", "󰂊", "󰂋", "󰂅"]
+    return battery.iconName.includes("charging") ? charging[level] : discharging[level]
+  }
+
   Timer {
     interval: 1000
     running: true
@@ -398,7 +405,7 @@ ShellRoot {
         BarLabel {
           id: batteryLabel
           anchors.centerIn: parent
-          text: root.battery ? `${Math.round(root.battery.percentage * 100)}% ${root.battery.iconName.includes("charging") ? "" : ""}` : ""
+          text: root.battery ? `${Math.round(root.battery.percentage * 100)}% ${root.batteryGlyph(root.battery)}` : ""
           color: root.battery && root.battery.percentage <= 0.1 ? "#f38ba8" : "#ffffff"
         }
       }
