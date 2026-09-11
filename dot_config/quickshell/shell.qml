@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Services.Mpris
+import Quickshell.Services.Pipewire
 import Quickshell.Services.SystemTray
 import Quickshell.Services.UPower
 import Quickshell.Widgets
@@ -25,12 +26,42 @@ ShellRoot {
                        || Mpris.players.values[0]
                        || null
   property var battery: UPower.devices.values.find(device => device.isLaptopBattery) || null
+  property var defaultAudioSink: Pipewire.defaultAudioSink
+
+  // PipeWire only exposes live volume state for tracked objects.
+  PwObjectTracker {
+    objects: [root.defaultAudioSink]
+  }
 
   function batteryGlyph(battery) {
     const level = Math.min(9, Math.max(0, Math.floor(battery.percentage * 10)))
     const discharging = ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"]
     const charging = ["󰢜", "󰂆", "󰂇", "󰂈", "󰢝", "󰂉", "󰢞", "󰂊", "󰂋", "󰂅"]
     return battery.iconName.includes("charging") ? charging[level] : discharging[level]
+  }
+
+  function weatherGlyph(code, isDay = true) {
+    if (code === 0) return isDay ? "󰖙" : "󰖔"
+    if (code <= 2) return isDay ? "󰖕" : "󰖔"
+    if (code === 3) return "󰖐"
+    if (code <= 48) return "󰖑"
+    if (code <= 57) return "󰖗"
+    if (code <= 67) return "󰖖"
+    if (code <= 77) return "󰖘"
+    if (code <= 82) return "󰖖"
+    return "󰖓"
+  }
+
+  function weatherDescription(code) {
+    if (code === 0) return "Clear sky"
+    if (code <= 2) return "Partly cloudy"
+    if (code === 3) return "Overcast"
+    if (code <= 48) return "Foggy"
+    if (code <= 57) return "Drizzle"
+    if (code <= 67) return "Rain"
+    if (code <= 77) return "Snow"
+    if (code <= 82) return "Showers"
+    return "Thunderstorms"
   }
 
   Timer {
@@ -42,7 +73,7 @@ ShellRoot {
   }
 
   component BarModule: Rectangle {
-    color: "#2a2636"
+    color: "#2d2722"
     radius: 6
     height: 29
   }
@@ -52,7 +83,7 @@ ShellRoot {
     font.pixelSize: 14
     font.weight: Font.DemiBold
     verticalAlignment: Text.AlignVCenter
-    color: "#cdd6f4"
+    color: "#e5d5c2"
   }
 
   PanelWindow {
@@ -76,12 +107,61 @@ ShellRoot {
     property real previousRxBytes: -1
     property real previousTxBytes: -1
     property double previousNetworkSampleMs: 0
-    property string volume: "--"
-    property bool muted: false
+    property string volume: root.defaultAudioSink?.audio
+      ? Math.round(root.defaultAudioSink.audio.volume * 100).toString()
+      : "--"
+    property bool muted: root.defaultAudioSink?.audio?.muted || false
     property bool hasNotifications: false
-    property bool japaneseInput: false
+    property string hostname: ""
     property string systemInfo: "Loading system information..."
     property var calendarEvents: []
+    property var weather: null
+    property int weatherHourIndex: 0
+
+    FileView {
+      id: weatherLocationFile
+      path: Quickshell.env("HOME") + "/.config/quickshell/weather.local.json"
+      watchChanges: true
+      onFileChanged: reload()
+      onLoaded: weatherFetch.running = true
+      JsonAdapter {
+        id: weatherLocation
+        property string name: ""
+        property real latitude: 0
+        property real longitude: 0
+        property string timezone: "auto"
+      }
+    }
+
+    Process {
+      id: weatherFetch
+      command: [
+        "curl", "--fail", "--silent", "--show-error",
+        `https://api.open-meteo.com/v1/forecast?latitude=${weatherLocation.latitude}&longitude=${weatherLocation.longitude}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,is_day&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=${weatherLocation.timezone}&forecast_days=7`
+      ]
+      stdout: StdioCollector {
+        onStreamFinished: {
+          try {
+            const forecast = JSON.parse(this.text)
+            bar.weather = forecast
+            const currentHour = forecast.current.time.slice(0, 13)
+            bar.weatherHourIndex = Math.max(0, forecast.hourly.time.findIndex(time => time.startsWith(currentHour)))
+          } catch (error) {
+            console.warn(`Unable to parse Open-Meteo response: ${error}`)
+          }
+        }
+      }
+      stderr: SplitParser {
+        onRead: data => console.warn(`Open-Meteo request failed: ${data}`)
+      }
+    }
+
+    Timer {
+      interval: 900000
+      running: true
+      repeat: true
+      onTriggered: if (!weatherFetch.running) weatherFetch.running = true
+    }
 
     Process {
       id: cpuProbe
@@ -128,44 +208,35 @@ ShellRoot {
     }
 
     Process {
-      id: volumeProbe
-      command: ["wpctl", "get-volume", "@DEFAULT_AUDIO_SINK@"]
-      stdout: StdioCollector {
-        onStreamFinished: {
-          const result = text.trim()
-          const match = result.match(/Volume:\s+([0-9.]+)/)
-          if (match) bar.volume = Math.round(Number(match[1]) * 100)
-          bar.muted = result.includes("MUTED")
-        }
-      }
-    }
-
-    Process {
-      id: notificationProbe
-      command: ["swaync-client", "-c"]
-      stdout: StdioCollector {
-        onStreamFinished: bar.hasNotifications = Number(text.trim()) > 0
-      }
-    }
-
-    Process {
-      id: fcitxProbe
-      command: ["sh", "-c", "fcitx5-remote; fcitx5-remote -n"]
-      stdout: StdioCollector {
-        onStreamFinished: {
-          const state = this.text.trim().split("\n")
-          bar.japaneseInput = state[0] === "2" && /mozc|anthy|skk|japanese/i.test(state[1] || "")
-        }
-      }
-    }
-
-    // Keep the input-mode indicator responsive without increasing metric polling.
-    Timer {
-      interval: 150
+      id: notificationSubscription
+      command: ["swaync-client", "-swb"]
       running: true
-      repeat: true
-      triggeredOnStart: true
-      onTriggered: fcitxProbe.running = true
+      onRunningChanged: if (!running) notificationReconnect.restart()
+      stdout: SplitParser {
+        onRead: data => {
+          try {
+            const state = JSON.parse(data)
+            bar.hasNotifications = state.alt === "notification"
+          } catch (error) {
+            console.warn(`Unable to parse SwayNC state: ${data}`)
+          }
+        }
+      }
+    }
+
+    Timer {
+      id: notificationReconnect
+      interval: 1000
+      onTriggered: notificationSubscription.running = true
+    }
+
+    Process {
+      id: hostnameProbe
+      command: ["uname", "-n"]
+      running: true
+      stdout: StdioCollector {
+        onStreamFinished: bar.hostname = this.text.trim()
+      }
     }
 
     Process {
@@ -213,8 +284,6 @@ ShellRoot {
         cpuProbe.running = true
         memoryProbe.running = true
         networkProbe.running = true
-        volumeProbe.running = true
-        notificationProbe.running = true
       }
     }
 
@@ -285,21 +354,52 @@ ShellRoot {
       }
     }
 
-    BarModule {
-      id: clockModule
+    Row {
+      id: centerModules
       anchors.centerIn: parent
-      width: clockLabel.implicitWidth + 20
-      BarLabel {
-        id: clockLabel
-        anchors.centerIn: parent
-        text: Qt.formatDateTime(root.now, "HH:mm:ss")
-        color: "#fab489"
-        font.pixelSize: 16
+      spacing: 3
+
+      BarModule {
+        id: clockModule
+        width: clockLabel.implicitWidth + 20
+        BarLabel {
+          id: clockLabel
+          anchors.centerIn: parent
+          text: Qt.formatDateTime(root.now, "HH:mm:ss")
+          color: "#fab489"
+          font.pixelSize: 16
+        }
+        MouseArea {
+          anchors.fill: parent
+          cursorShape: Qt.PointingHandCursor
+          onClicked: mediaPopup.visible = !mediaPopup.visible
+        }
       }
-      MouseArea {
-        anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        onClicked: mediaPopup.visible = !mediaPopup.visible
+
+      BarModule {
+        id: weatherModule
+        width: weatherContent.width + 20
+        Row {
+          id: weatherContent
+          anchors.centerIn: parent
+          spacing: 5
+          BarLabel {
+            text: bar.weather ? root.weatherGlyph(bar.weather.current.weather_code, bar.weather.current.is_day === 1) : "󰖐"
+            color: "#89b4fa"
+          }
+          BarLabel {
+            text: bar.weather ? `${Math.round(bar.weather.current.temperature_2m)}°` : "--"
+            color: "#89b4fa"
+          }
+        }
+        MouseArea {
+          anchors.fill: parent
+          cursorShape: Qt.PointingHandCursor
+          onClicked: {
+            if (!bar.weather && !weatherFetch.running) weatherFetch.running = true
+            weatherPopup.visible = !weatherPopup.visible
+          }
+        }
       }
     }
 
@@ -351,7 +451,13 @@ ShellRoot {
           anchors.centerIn: parent
           spacing: 5
           BarLabel {
-            text: bar.muted ? "" : ""
+            text: {
+              if (bar.muted) return ""
+              const sink = root.defaultAudioSink
+              return sink && /bluez|headphones?|headset|airpods|buds/i.test(`${sink.name} ${sink.description}`)
+                ? ""
+                : ""
+            }
             color: bar.muted ? "#c8ada6" : "#febeb4"
           }
           BarLabel {
@@ -363,7 +469,6 @@ ShellRoot {
           anchors.fill: parent
           cursorShape: Qt.PointingHandCursor
           onClicked: {
-            bar.muted = !bar.muted
             muteProcess.running = true
           }
           onWheel: wheel => {
@@ -385,19 +490,25 @@ ShellRoot {
             model: SystemTray.items
             delegate: Item {
               required property var modelData
+              readonly property bool isFcitx: modelData.id === "Fcitx"
               implicitWidth: 17
               implicitHeight: 17
               IconImage {
+                id: trayIcon
                 anchors.fill: parent
-                source: String(parent.modelData.icon).includes("input-keyboard-symbolic") || parent.modelData.id === "Fcitx" ? "" : parent.modelData.icon
+                source: parent.isFcitx || String(parent.modelData.icon).includes("input-keyboard-symbolic")
+                  ? ""
+                  : parent.modelData.icon
               }
               BarLabel {
                 anchors.centerIn: parent
-                text: parent.modelData.id === "Fcitx" ? (bar.japaneseInput ? "あ" : "A") : ""
-                font.family: parent.modelData.id === "Fcitx" && bar.japaneseInput ? "Noto Sans CJK JP" : "Lexend"
+                text: parent.isFcitx && /japanese|mozc|anthy|skk|hiragana|katakana/i.test(parent.modelData.tooltipTitle)
+                  ? "あ"
+                  : parent.isFcitx ? "A" : ""
+                font.family: parent.isFcitx ? "Noto Sans CJK JP" : "Lexend"
                 font.pixelSize: 15
-                color: parent.modelData.id === "Fcitx" ? "#fab489" : "#cdd6f4"
-                visible: String(parent.modelData.icon).includes("input-keyboard-symbolic") || parent.modelData.id === "Fcitx"
+                color: parent.isFcitx ? "#fab489" : "#cdd6f4"
+                visible: parent.isFcitx || trayIcon.source === ""
               }
               MouseArea {
                 anchors.fill: parent
@@ -474,8 +585,8 @@ ShellRoot {
       Rectangle {
         anchors.fill: parent
         radius: 10
-        color: "#181825"
-        border.color: "#46363a"
+        color: Qt.rgba(36 / 255, 31 / 255, 27 / 255, 0.82)
+        border.color: "#725442"
         border.width: 1
         opacity: systemPopup.visible ? 1 : 0
         transform: Translate {
@@ -488,7 +599,7 @@ ShellRoot {
           anchors.fill: parent
           anchors.margins: 14
           spacing: 8
-          BarLabel { text: "  System"; color: "#fab489"; font.pixelSize: 17 }
+          BarLabel { text: bar.hostname || "System"; color: "#fab489"; font.pixelSize: 17 }
           BarLabel {
             width: parent.width
             text: bar.systemInfo
@@ -513,8 +624,8 @@ ShellRoot {
       Rectangle {
         anchors.fill: parent
         radius: 10
-        color: "#181825"
-        border.color: "#46363a"
+        color: Qt.rgba(36 / 255, 31 / 255, 27 / 255, 0.82)
+        border.color: "#725442"
         border.width: 1
         opacity: mediaPopup.visible ? 1 : 0
         transform: Translate {
@@ -660,6 +771,204 @@ ShellRoot {
                 text: ""
                 color: root.player && root.player.canGoNext ? "#cdd6f4" : "#585b70"
                 MouseArea { anchors.fill: parent; enabled: root.player && root.player.canGoNext; onClicked: root.player.next() }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    PopupWindow {
+      id: weatherPopup
+      anchor.window: bar
+      anchor.rect.x: centerModules.x + weatherModule.x + weatherModule.width / 2 - width / 2
+      anchor.rect.y: bar.height + 6
+      implicitWidth: 590
+      implicitHeight: weatherColumn.implicitHeight + 28
+      visible: false
+      grabFocus: true
+      color: "transparent"
+      Rectangle {
+        anchors.fill: parent
+        radius: 10
+        color: Qt.rgba(36 / 255, 31 / 255, 27 / 255, 0.82)
+        border.color: "#725442"
+        border.width: 1
+        opacity: weatherPopup.visible ? 1 : 0
+        transform: Translate {
+          y: weatherPopup.visible ? 0 : -14
+          Behavior on y { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+        }
+        Behavior on opacity { NumberAnimation { duration: 150 } }
+        Column {
+          id: weatherColumn
+          anchors.fill: parent
+          anchors.margins: 14
+          spacing: 13
+
+          Row {
+            width: parent.width
+            spacing: 8
+            BarLabel {
+              text: weatherLocation.name || "Weather"
+              color: "#89b4fa"
+              font.pixelSize: 18
+            }
+            BarLabel {
+              anchors.verticalCenter: parent.verticalCenter
+              text: bar.weather ? `Updated ${bar.weather.current.time.slice(11)}` : "Loading forecast..."
+              color: "#9399b2"
+              font.pixelSize: 12
+            }
+          }
+
+          Row {
+            width: parent.width
+            spacing: 16
+            BarLabel {
+              width: 68
+              horizontalAlignment: Text.AlignHCenter
+              text: bar.weather ? root.weatherGlyph(bar.weather.current.weather_code, bar.weather.current.is_day === 1) : "󰖐"
+              color: "#89b4fa"
+              font.pixelSize: 42
+            }
+            Column {
+              width: 155
+              spacing: 2
+              BarLabel {
+                text: bar.weather ? `${Math.round(bar.weather.current.temperature_2m)}°F` : "--"
+                color: "#cdd6f4"
+                font.pixelSize: 30
+              }
+              BarLabel {
+                text: bar.weather ? root.weatherDescription(bar.weather.current.weather_code) : ""
+                color: "#cdd6f4"
+                font.pixelSize: 13
+              }
+              BarLabel {
+                text: bar.weather ? `Feels like ${Math.round(bar.weather.current.apparent_temperature)}°F` : ""
+                color: "#9399b2"
+                font.pixelSize: 12
+              }
+            }
+            Column {
+              spacing: 4
+              BarLabel {
+                text: bar.weather ? `󰖎  ${bar.weather.current.relative_humidity_2m}% humidity` : ""
+                color: "#a6e3a1"
+                font.pixelSize: 13
+              }
+              BarLabel {
+                text: bar.weather ? `󰖝  ${Math.round(bar.weather.current.wind_speed_10m)} mph wind` : ""
+                color: "#a6e3a1"
+                font.pixelSize: 13
+              }
+              BarLabel {
+                text: bar.weather ? `󰖛  Sunrise ${bar.weather.daily.sunrise[0].slice(11)}  Sunset ${bar.weather.daily.sunset[0].slice(11)}` : ""
+                color: "#a6e3a1"
+                font.pixelSize: 13
+              }
+            }
+          }
+
+          Rectangle { width: parent.width; height: 1; color: "#46363a" }
+
+          Column {
+            width: parent.width
+            spacing: 7
+            BarLabel { text: "Next hours"; color: "#f9e2af"; font.pixelSize: 14 }
+            Row {
+              spacing: 18
+              Repeater {
+                model: 6
+                delegate: Column {
+                  required property int index
+                  width: 75
+                  spacing: 2
+                  BarLabel {
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
+                    text: bar.weather ? bar.weather.hourly.time[bar.weatherHourIndex + index].slice(11) : "--:--"
+                    color: "#9399b2"
+                    font.pixelSize: 12
+                  }
+                  BarLabel {
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
+                    text: bar.weather ? root.weatherGlyph(bar.weather.hourly.weather_code[bar.weatherHourIndex + index]) : ""
+                    color: "#89b4fa"
+                    font.pixelSize: 18
+                  }
+                  BarLabel {
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
+                    text: bar.weather ? `${Math.round(bar.weather.hourly.temperature_2m[bar.weatherHourIndex + index])}°` : ""
+                    color: "#cdd6f4"
+                    font.pixelSize: 13
+                  }
+                  BarLabel {
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
+                    text: bar.weather && bar.weather.hourly.precipitation_probability[bar.weatherHourIndex + index] > 0
+                      ? `${bar.weather.hourly.precipitation_probability[bar.weatherHourIndex + index]}% rain`
+                      : ""
+                    color: "#94e2d5"
+                    font.pixelSize: 11
+                  }
+                }
+              }
+            }
+          }
+
+          Rectangle { width: parent.width; height: 1; color: "#46363a" }
+
+          Column {
+            width: parent.width
+            spacing: 7
+            BarLabel { text: "Five-day forecast"; color: "#f9e2af"; font.pixelSize: 14 }
+            Repeater {
+              model: 5
+              delegate: Row {
+                required property int index
+                width: parent.width
+                spacing: 8
+                BarLabel {
+                  width: 96
+                  text: bar.weather
+                    ? index === 0 ? "Today" : Qt.formatDateTime(new Date(`${bar.weather.daily.time[index]}T12:00`), "ddd")
+                    : "--"
+                  color: "#cdd6f4"
+                  font.pixelSize: 13
+                }
+                BarLabel {
+                  width: 24
+                  horizontalAlignment: Text.AlignHCenter
+                  text: bar.weather ? root.weatherGlyph(bar.weather.daily.weather_code[index]) : ""
+                  color: "#89b4fa"
+                  font.pixelSize: 16
+                }
+                BarLabel {
+                  width: 170
+                  text: bar.weather ? root.weatherDescription(bar.weather.daily.weather_code[index]) : ""
+                  color: "#9399b2"
+                  font.pixelSize: 13
+                }
+                BarLabel {
+                  width: 90
+                  horizontalAlignment: Text.AlignRight
+                  text: bar.weather ? `${Math.round(bar.weather.daily.temperature_2m_max[index])}° / ${Math.round(bar.weather.daily.temperature_2m_min[index])}°` : ""
+                  color: "#cdd6f4"
+                  font.pixelSize: 13
+                }
+                BarLabel {
+                  width: 105
+                  horizontalAlignment: Text.AlignRight
+                  text: bar.weather && bar.weather.daily.precipitation_probability_max[index] > 0
+                    ? `${bar.weather.daily.precipitation_probability_max[index]}% rain`
+                    : ""
+                  color: "#94e2d5"
+                  font.pixelSize: 12
+                }
               }
             }
           }

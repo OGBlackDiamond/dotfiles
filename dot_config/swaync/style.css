@@ -1,0 +1,42 @@
+@import url("file:///etc/xdg/swaync/style.css");
+
+:root {
+  --cc-bg: rgba(36, 31, 27, 0.82);
+  --noti-border-color: rgba(142, 99, 62, 0.9);
+  --noti-bg: 45, 39, 34;
+  --noti-bg-alpha: 0.88;
+  --noti-bg-darker: rgb(36, 31, 27);
+  --noti-bg-hover: rgb(58, 49, 41);
+  --noti-bg-focus: rgba(58, 49, 41, 0.9);
+  --noti-close-bg: rgb(243, 139, 168);
+  --noti-close-bg-hover: rgb(250, 180, 137);
+  --text-color: rgb(229, 213, 194);
+  --text-color-disabled: rgb(178, 154, 122);
+  --bg-selected: rgb(230, 164, 104);
+  --border-radius: 10px;
+  --font-size-body: 14px;
+  --font-size-summary: 14px;
+}
+
+* {
+  font-family: Lexend, "FiraCode Nerd Font";
+}
+
+.control-center {
+  border: 1px solid var(--noti-border-color);
+}
+
+.widget {
+  background: rgba(58, 49, 41, 0.75);
+}
+
+.close-button {
+  color: rgb(36, 31, 27);
+}
+
+/* Align the notification stack with Hyprland's 10px outer window gap. */
+.floating-notifications {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-right: 10px;
+}
