@@ -78,6 +78,7 @@ ShellRoot {
     property double previousNetworkSampleMs: 0
     property string volume: "--"
     property bool muted: false
+    property bool headphones: false
     property bool hasNotifications: false
     property bool japaneseInput: false
     property string systemInfo: "Loading system information..."
@@ -128,13 +129,14 @@ ShellRoot {
 
     Process {
       id: volumeProbe
-      command: ["wpctl", "get-volume", "@DEFAULT_AUDIO_SINK@"]
+      command: ["sh", "-c", "wpctl get-volume @DEFAULT_AUDIO_SINK@; wpctl inspect @DEFAULT_AUDIO_SINK@"]
       stdout: StdioCollector {
         onStreamFinished: {
           const result = text.trim()
           const match = result.match(/Volume:\s+([0-9.]+)/)
           if (match) bar.volume = Math.round(Number(match[1]) * 100)
           bar.muted = result.includes("MUTED")
+          bar.headphones = /device\.api = "bluez5"|audio-headphones|head(phone|set)/i.test(result)
         }
       }
     }
@@ -322,7 +324,7 @@ ShellRoot {
           anchors.centerIn: parent
           spacing: 5
           BarLabel {
-            text: bar.muted ? "" : ""
+            text: bar.muted ? "" : (bar.headphones ? "" : "")
             color: bar.muted ? "#c8ada6" : "#febeb4"
           }
           BarLabel {
