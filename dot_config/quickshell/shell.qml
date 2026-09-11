@@ -81,6 +81,7 @@ ShellRoot {
     property bool hasNotifications: false
     property bool japaneseInput: false
     property string systemInfo: "Loading system information..."
+    property var calendarEvents: []
 
     Process {
       id: cpuProbe
@@ -173,6 +174,34 @@ ShellRoot {
       stdout: StdioCollector {
         onStreamFinished: bar.systemInfo = text.trim()
       }
+    }
+
+    Process {
+      id: calendarProbe
+      command: ["gcalcli", "agenda", "--tsv", "--military", "today", "7 days"]
+      stdout: StdioCollector {
+        onStreamFinished: {
+          const lines = this.text.trim().split("\n")
+          bar.calendarEvents = lines.slice(1).filter(line => line.length > 0).map(line => {
+            const fields = line.split("\t")
+            return {
+              startDate: fields[0],
+              startTime: fields[1],
+              endDate: fields[2],
+              endTime: fields[3],
+              title: fields.slice(4).join("\t")
+            }
+          })
+        }
+      }
+    }
+
+    Timer {
+      interval: 300000
+      running: true
+      repeat: true
+      triggeredOnStart: true
+      onTriggered: calendarProbe.running = true
     }
 
     Timer {
@@ -477,7 +506,7 @@ ShellRoot {
       anchor.rect.x: bar.width / 2 - width / 2
       anchor.rect.y: bar.height + 6
       implicitWidth: 600
-      implicitHeight: 360
+      implicitHeight: 440
       visible: false
       grabFocus: true
       color: "transparent"
@@ -534,13 +563,52 @@ ShellRoot {
                   height: 28
                   radius: 14
                   color: day === today.getDate() ? "#f38ba8" : "transparent"
-                  visible: day > 0 && day <= monthDays
+                  // Invisible Grid children collapse; retain empty leading cells for alignment.
+                  opacity: day > 0 && day <= monthDays ? 1 : 0
                   BarLabel {
                     anchors.centerIn: parent
                     text: parent.day
                     color: parent.day === parent.today.getDate() ? "#181825" : "#cdd6f4"
                   }
                 }
+              }
+            }
+            BarLabel {
+              Layout.topMargin: 4
+              text: "Upcoming"
+              color: "#a6e3a1"
+              font.pixelSize: 15
+            }
+            ListView {
+              Layout.fillWidth: true
+              Layout.preferredHeight: 82
+              clip: true
+              spacing: 3
+              model: bar.calendarEvents
+              delegate: Row {
+                required property var modelData
+                width: parent.width
+                spacing: 7
+                BarLabel {
+                  width: 72
+                  text: `${modelData.startDate.slice(5)} ${modelData.startTime}`
+                  color: "#89b4fa"
+                  font.pixelSize: 12
+                }
+                BarLabel {
+                  width: parent.width - 79
+                  text: modelData.title
+                  color: "#cdd6f4"
+                  font.pixelSize: 12
+                  elide: Text.ElideRight
+                }
+              }
+              BarLabel {
+                anchors.centerIn: parent
+                visible: bar.calendarEvents.length === 0
+                text: "No upcoming events"
+                color: "#9399b2"
+                font.pixelSize: 12
               }
             }
           }
