@@ -34,9 +34,14 @@
   color: rgb(36, 31, 27);
 }
 
-/* Align the notification stack with Hyprland's 10px outer window gap. */
+/* Keep the notification stack at the screen's 10px outer gap. */
 .floating-notifications {
   margin-top: 10px;
   margin-bottom: 10px;
   margin-right: 10px;
+}
+
+/* The inherited row padding would otherwise inset cards from the window edge. */
+.floating-notifications .notification-row .notification-background {
+  padding: 0 0 10px;
 }

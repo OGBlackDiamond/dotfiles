@@ -86,10 +86,115 @@ ShellRoot {
     color: "#e5d5c2"
   }
 
+  component HistoryGraph: Canvas {
+    property var samples: []
+    property color lineColor: "#cdd6f4"
+    property real maximum: 100
+    antialiasing: true
+
+    onSamplesChanged: requestPaint()
+    onWidthChanged: requestPaint()
+    onHeightChanged: requestPaint()
+    onPaint: {
+      const context = getContext("2d")
+      context.clearRect(0, 0, width, height)
+      if (samples.length < 2 || width <= 0 || height <= 0) return
+
+      const scale = Math.max(1, maximum)
+      context.beginPath()
+      for (let index = 0; index < samples.length; index++) {
+        const x = index * width / (samples.length - 1)
+        const y = height - Math.min(1, Math.max(0, samples[index] / scale)) * height
+        if (index === 0) context.moveTo(x, y)
+        else context.lineTo(x, y)
+      }
+      context.lineTo(width, height)
+      context.lineTo(0, height)
+      context.closePath()
+      context.globalAlpha = 0.18
+      context.fillStyle = lineColor
+      context.fill()
+      context.globalAlpha = 1
+      context.strokeStyle = lineColor
+      context.lineWidth = 1.5
+      context.lineJoin = "round"
+      context.beginPath()
+      for (let index = 0; index < samples.length; index++) {
+        const x = index * width / (samples.length - 1)
+        const y = height - Math.min(1, Math.max(0, samples[index] / scale)) * height
+        if (index === 0) context.moveTo(x, y)
+        else context.lineTo(x, y)
+      }
+      context.stroke()
+    }
+  }
+
+  component DualHistoryGraph: Canvas {
+    property var uploadSamples: []
+    property var downloadSamples: []
+    property color uploadColor: "#94e2d5"
+    property color downloadColor: "#89b4fa"
+    property real maximum: 1
+    antialiasing: true
+
+    onUploadSamplesChanged: requestPaint()
+    onDownloadSamplesChanged: requestPaint()
+    onWidthChanged: requestPaint()
+    onHeightChanged: requestPaint()
+    onPaint: {
+      const context = getContext("2d")
+      context.clearRect(0, 0, width, height)
+      if (width <= 0 || height <= 0) return
+
+      const middle = height / 2
+      context.strokeStyle = "#5b5352"
+      context.lineWidth = 1
+      context.beginPath()
+      context.moveTo(0, middle)
+      context.lineTo(width, middle)
+      context.stroke()
+
+      const scale = Math.max(1, maximum)
+      const draw = (samples, color, direction) => {
+        if (samples.length < 2) return
+        context.beginPath()
+        for (let index = 0; index < samples.length; index++) {
+          const x = index * width / (samples.length - 1)
+          const y = middle - direction * Math.min(1, Math.max(0, samples[index] / scale)) * middle
+          if (index === 0) context.moveTo(x, y)
+          else context.lineTo(x, y)
+        }
+        context.lineTo(width, middle)
+        context.lineTo(0, middle)
+        context.closePath()
+        context.globalAlpha = 0.18
+        context.fillStyle = color
+        context.fill()
+        context.globalAlpha = 1
+        context.strokeStyle = color
+        context.lineWidth = 1.5
+        context.lineJoin = "round"
+        context.beginPath()
+        for (let index = 0; index < samples.length; index++) {
+          const x = index * width / (samples.length - 1)
+          const y = middle - direction * Math.min(1, Math.max(0, samples[index] / scale)) * middle
+          if (index === 0) context.moveTo(x, y)
+          else context.lineTo(x, y)
+        }
+        context.stroke()
+      }
+      draw(uploadSamples, uploadColor, 1)
+      draw(downloadSamples, downloadColor, -1)
+    }
+  }
+
   PanelWindow {
     id: bar
-    // Prefer the internal panel whenever it is enabled; otherwise use the dock.
-    screen: Quickshell.screens.find(screen => Hyprland.monitorFor(screen)?.name === "eDP-1") || Quickshell.screens[0]
+    // Prefer the enabled internal panel; otherwise stay on one stable dock display.
+    screen: Quickshell.screens.find(screen => {
+      const monitor = Hyprland.monitorFor(screen)
+      return monitor?.name === "eDP-1" && monitor.activeWorkspace !== null
+    }) || Quickshell.screens.find(screen => Hyprland.monitorFor(screen)?.description === "Dell Inc. DELL U2424HE 8NCB4X3") || Quickshell.screens[0]
     anchors {
       top: true
       left: true
@@ -99,11 +204,20 @@ ShellRoot {
     color: "transparent"
     exclusiveZone: 43
 
-    // Each probe owns one value, so a slow command cannot block another widget.
     property string cpuUsage: "--"
     property string memoryUsage: "--"
     property string downloadRate: "--"
     property string uploadRate: "--"
+    property var cpuHistory: []
+    property var cpuCoreUsage: []
+    property var previousCpuCounters: []
+    property var memoryHistory: []
+    property var memoryStats: ({})
+    property var downloadHistory: []
+    property var uploadHistory: []
+    property string networkInterface: ""
+    property real networkRxBytes: 0
+    property real networkTxBytes: 0
     property real previousRxBytes: -1
     property real previousTxBytes: -1
     property double previousNetworkSampleMs: 0
@@ -163,41 +277,28 @@ ShellRoot {
       onTriggered: if (!weatherFetch.running) weatherFetch.running = true
     }
 
-    Process {
-      id: cpuProbe
-      command: ["sh", "-c", "LC_ALL=C top -bn1 | awk '/Cpu\\(s\\)/ { printf \"%.0f\", 100 - $8 }'"]
-      stdout: StdioCollector {
-        onStreamFinished: bar.cpuUsage = this.text.trim() || "--"
-      }
+    FileView {
+      id: cpuStatFile
+      path: "/proc/stat"
+      onLoaded: bar.updateCpu(text())
     }
 
-    Process {
-      id: memoryProbe
-      command: ["sh", "-c", "free -b | awk '/Mem:/ { printf \"%.1f\", $3 / 1000000000 }'"]
-      stdout: StdioCollector {
-        onStreamFinished: bar.memoryUsage = this.text.trim() || "--"
-      }
+    FileView {
+      id: memoryInfoFile
+      path: "/proc/meminfo"
+      onLoaded: bar.updateMemory(text())
     }
 
-    Process {
-      id: networkProbe
-      command: ["sh", "-c", "awk -F ':' 'NR > 2 { gsub(/^[[:space:]]+/, \"\", $1); gsub(/^[[:space:]]+/, \"\", $2); if ($1 != \"lo\") { split($2, fields, /[[:space:]]+/); rx += fields[1]; tx += fields[9] } } END { print rx, tx }' /proc/net/dev"]
-      stdout: StdioCollector {
-        onStreamFinished: {
-          const counters = this.text.trim().split(" ")
-          const now = Date.now()
-          if (counters.length === 2 && bar.previousNetworkSampleMs > 0) {
-            const seconds = (now - bar.previousNetworkSampleMs) / 1000
-            const downBytesPerSecond = (Number(counters[0]) - bar.previousRxBytes) / seconds
-            const upBytesPerSecond = (Number(counters[1]) - bar.previousTxBytes) / seconds
-            bar.downloadRate = bar.formatNetworkRate(downBytesPerSecond)
-            bar.uploadRate = bar.formatNetworkRate(upBytesPerSecond)
-          }
-          bar.previousRxBytes = Number(counters[0])
-          bar.previousTxBytes = Number(counters[1])
-          bar.previousNetworkSampleMs = now
-        }
-      }
+    FileView {
+      id: networkRouteFile
+      path: "/proc/net/route"
+      onLoaded: bar.updateNetworkInterface(text())
+    }
+
+    FileView {
+      id: networkDevFile
+      path: "/proc/net/dev"
+      onLoaded: bar.updateNetwork(text())
     }
 
     function formatNetworkRate(bytesPerSecond) {
@@ -205,6 +306,109 @@ ShellRoot {
       return kilobytesPerSecond >= 1000
         ? `${(kilobytesPerSecond / 1000).toFixed(1)}M`
         : `${Math.round(kilobytesPerSecond)}K`
+    }
+
+    function appendHistory(history, value) {
+      const next = history.concat([value])
+      return next.length > 60 ? next.slice(next.length - 60) : next
+    }
+
+    function historyMaximum(history) {
+      return history.reduce((maximum, value) => Math.max(maximum, value), 1)
+    }
+
+    function formatBytes(bytes) {
+      const units = ["B", "KiB", "MiB", "GiB", "TiB"]
+      let value = Math.max(0, bytes)
+      let unit = 0
+      while (value >= 1024 && unit < units.length - 1) {
+        value /= 1024
+        unit++
+      }
+      return `${value >= 10 || unit === 0 ? Math.round(value) : value.toFixed(1)} ${units[unit]}`
+    }
+
+    function updateCpu(text) {
+      const counters = text.split("\n").filter(line => /^cpu\d*\s/.test(line)).map(line =>
+        line.trim().split(/\s+/).slice(1, 9).map(Number))
+      if (counters.length === 0) return
+
+      if (previousCpuCounters.length === counters.length) {
+        const usage = counters.map((current, index) => {
+          const previous = previousCpuCounters[index]
+          const totalDelta = current.reduce((sum, value) => sum + value, 0)
+            - previous.reduce((sum, value) => sum + value, 0)
+          const idleDelta = (current[3] + current[4]) - (previous[3] + previous[4])
+          return totalDelta > 0 ? Math.max(0, Math.min(100, 100 * (totalDelta - idleDelta) / totalDelta)) : 0
+        })
+        cpuUsage = Math.round(usage[0]).toString()
+        cpuCoreUsage = usage.slice(1)
+        cpuHistory = appendHistory(cpuHistory, usage[0])
+      }
+      previousCpuCounters = counters
+    }
+
+    function updateMemory(text) {
+      const values = {}
+      text.split("\n").forEach(line => {
+        const match = /^(\w+):\s+(\d+)/.exec(line)
+        if (match) values[match[1]] = Number(match[2]) * 1024
+      })
+      if (!values.MemTotal || !values.MemAvailable) return
+
+      const used = values.MemTotal - values.MemAvailable
+      memoryStats = {
+        total: values.MemTotal,
+        used: used,
+        available: values.MemAvailable,
+        free: values.MemFree || 0,
+        buffers: values.Buffers || 0,
+        cache: (values.Cached || 0) + (values.SReclaimable || 0),
+        swapTotal: values.SwapTotal || 0,
+        swapUsed: (values.SwapTotal || 0) - (values.SwapFree || 0)
+      }
+      memoryUsage = (used / 1024 / 1024 / 1024).toFixed(1)
+      memoryHistory = appendHistory(memoryHistory, 100 * used / values.MemTotal)
+    }
+
+    function updateNetworkInterface(text) {
+      const route = text.split("\n").slice(1).map(line => line.trim().split(/\s+/)).find(fields =>
+        fields.length >= 4 && fields[1] === "00000000" && (Number.parseInt(fields[3], 16) & 1))
+      const nextInterface = route ? route[0] : ""
+      if (networkInterface !== nextInterface) {
+        networkInterface = nextInterface
+        previousRxBytes = -1
+        previousTxBytes = -1
+        previousNetworkSampleMs = 0
+        downloadHistory = []
+        uploadHistory = []
+      }
+    }
+
+    function updateNetwork(text) {
+      if (!networkInterface) return
+      const line = text.split("\n").find(entry => entry.trim().startsWith(`${networkInterface}:`))
+      if (!line) return
+      const fields = line.split(":")[1].trim().split(/\s+/).map(Number)
+      if (fields.length < 9) return
+
+      const now = Date.now()
+      const rxBytes = fields[0]
+      const txBytes = fields[8]
+      if (previousNetworkSampleMs > 0) {
+        const seconds = (now - previousNetworkSampleMs) / 1000
+        const downBytesPerSecond = Math.max(0, rxBytes - previousRxBytes) / seconds
+        const upBytesPerSecond = Math.max(0, txBytes - previousTxBytes) / seconds
+        downloadRate = formatNetworkRate(downBytesPerSecond)
+        uploadRate = formatNetworkRate(upBytesPerSecond)
+        downloadHistory = appendHistory(downloadHistory, downBytesPerSecond)
+        uploadHistory = appendHistory(uploadHistory, upBytesPerSecond)
+      }
+      previousRxBytes = rxBytes
+      previousTxBytes = txBytes
+      previousNetworkSampleMs = now
+      networkRxBytes = rxBytes
+      networkTxBytes = txBytes
     }
 
     Process {
@@ -276,14 +480,15 @@ ShellRoot {
     }
 
     Timer {
-      interval: 1000
+      interval: 500
       running: true
       repeat: true
       triggeredOnStart: true
       onTriggered: {
-        cpuProbe.running = true
-        memoryProbe.running = true
-        networkProbe.running = true
+        cpuStatFile.reload()
+        memoryInfoFile.reload()
+        networkRouteFile.reload()
+        networkDevFile.reload()
       }
     }
 
@@ -362,6 +567,7 @@ ShellRoot {
       BarModule {
         id: clockModule
         width: clockLabel.implicitWidth + 20
+        color: Qt.rgba(45 / 255, 39 / 255, 34 / 255, 0.72)
         BarLabel {
           id: clockLabel
           anchors.centerIn: parent
@@ -379,6 +585,7 @@ ShellRoot {
       BarModule {
         id: weatherModule
         width: weatherContent.width + 20
+        color: Qt.rgba(45 / 255, 39 / 255, 34 / 255, 0.72)
         Row {
           id: weatherContent
           anchors.centerIn: parent
@@ -404,34 +611,62 @@ ShellRoot {
     }
 
     Row {
+      id: rightModules
       anchors.right: parent.right
       anchors.rightMargin: 6
       anchors.verticalCenter: parent.verticalCenter
       spacing: 3
 
       BarModule {
+        id: cpuModule
         width: cpuContent.width + 20
         Row {
           id: cpuContent
           anchors.centerIn: parent
           spacing: 5
           BarLabel { text: ""; color: "#d5e294" }
+          HistoryGraph {
+            width: 42
+            height: 16
+            anchors.verticalCenter: parent.verticalCenter
+            samples: bar.cpuHistory
+            lineColor: "#d5e294"
+          }
           BarLabel { text: `${bar.cpuUsage}%`; color: "#d5e294" }
+        }
+        MouseArea {
+          anchors.fill: parent
+          cursorShape: Qt.PointingHandCursor
+          onClicked: cpuPopup.visible = !cpuPopup.visible
         }
       }
 
       BarModule {
+        id: memoryModule
         width: memoryContent.width + 20
         Row {
           id: memoryContent
           anchors.centerIn: parent
           spacing: 5
           BarLabel { text: ""; color: "#f7a6cb" }
+          HistoryGraph {
+            width: 42
+            height: 16
+            anchors.verticalCenter: parent.verticalCenter
+            samples: bar.memoryHistory
+            lineColor: "#f7a6cb"
+          }
           BarLabel { text: `${bar.memoryUsage}GB`; color: "#f7a6cb" }
+        }
+        MouseArea {
+          anchors.fill: parent
+          cursorShape: Qt.PointingHandCursor
+          onClicked: memoryPopup.visible = !memoryPopup.visible
         }
       }
 
       BarModule {
+        id: networkModule
         width: networkContent.width + 20
         Row {
           id: networkContent
@@ -439,8 +674,21 @@ ShellRoot {
           spacing: 5
           BarLabel { text: "󰛳"; color: "#89b4fa" }
           BarLabel { text: bar.downloadRate; color: "#89b4fa" }
+          DualHistoryGraph {
+            width: 42
+            height: 16
+            anchors.verticalCenter: parent.verticalCenter
+            uploadSamples: bar.uploadHistory
+            downloadSamples: bar.downloadHistory
+            maximum: Math.max(bar.historyMaximum(bar.uploadHistory), bar.historyMaximum(bar.downloadHistory))
+          }
           BarLabel { text: "󰛴"; color: "#89b4fa" }
-          BarLabel { text: bar.uploadRate; color: "#89b4fa" }
+          BarLabel { text: bar.uploadRate; color: "#94e2d5" }
+        }
+        MouseArea {
+          anchors.fill: parent
+          cursorShape: Qt.PointingHandCursor
+          onClicked: networkPopup.visible = !networkPopup.visible
         }
       }
 
@@ -571,6 +819,217 @@ ShellRoot {
     Process { id: volumeAdjust }
     Process { id: notificationToggle; command: ["sh", "-c", "sleep 0.1 && swaync-client -t -sw"] }
     Process { id: powerMenu; command: ["wlogout", "-p", "layer-shell"] }
+
+    PopupWindow {
+      id: cpuPopup
+      anchor.window: bar
+      anchor.rect.x: rightModules.x + cpuModule.x + cpuModule.width / 2 - width / 2
+      anchor.rect.y: bar.height + 6
+      implicitWidth: 470
+      implicitHeight: cpuDetails.implicitHeight + 28
+      visible: false
+      grabFocus: true
+      color: "transparent"
+      Rectangle {
+        anchors.fill: parent
+        radius: 10
+        color: Qt.rgba(47 / 255, 49 / 255, 35 / 255, 0.88)
+        border.color: "#66704c"
+        border.width: 1
+        opacity: cpuPopup.visible ? 1 : 0
+        transform: Translate {
+          y: cpuPopup.visible ? 0 : -14
+          Behavior on y { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+        }
+        Behavior on opacity { NumberAnimation { duration: 150 } }
+        Column {
+          id: cpuDetails
+          anchors.fill: parent
+          anchors.margins: 14
+          spacing: 10
+          Row {
+            spacing: 8
+            BarLabel { text: "CPU"; color: "#d5e294"; font.pixelSize: 18 }
+            BarLabel { text: `${bar.cpuUsage}% overall`; color: "#cdd6f4"; font.pixelSize: 14 }
+            BarLabel { text: "Last 30 seconds"; color: "#9399b2"; font.pixelSize: 12 }
+          }
+          HistoryGraph {
+            width: parent.width
+            height: 70
+            samples: bar.cpuHistory
+            lineColor: "#d5e294"
+          }
+          Rectangle { width: parent.width; height: 1; color: "#46363a" }
+          BarLabel { text: "Logical CPUs"; color: "#f9e2af"; font.pixelSize: 14 }
+          Grid {
+            columns: 2
+            columnSpacing: 18
+            rowSpacing: 5
+            Repeater {
+              model: bar.cpuCoreUsage
+              delegate: Row {
+                required property int index
+                required property var modelData
+                width: 200
+                BarLabel { width: 62; text: `CPU ${index}`; color: "#cdd6f4"; font.pixelSize: 13 }
+                Rectangle {
+                  width: 92
+                  height: 7
+                  anchors.verticalCenter: parent.verticalCenter
+                  radius: 4
+                  color: "#46363a"
+                  Rectangle {
+                    width: parent.width * Math.min(1, modelData / 100)
+                    height: parent.height
+                    radius: parent.radius
+                    color: "#d5e294"
+                  }
+                }
+                BarLabel {
+                  width: 40
+                  horizontalAlignment: Text.AlignRight
+                  text: `${Math.round(modelData)}%`
+                  color: "#d5e294"
+                  font.pixelSize: 13
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    PopupWindow {
+      id: memoryPopup
+      anchor.window: bar
+      anchor.rect.x: rightModules.x + memoryModule.x + memoryModule.width / 2 - width / 2
+      anchor.rect.y: bar.height + 6
+      implicitWidth: 430
+      implicitHeight: memoryDetails.implicitHeight + 28
+      visible: false
+      grabFocus: true
+      color: "transparent"
+      Rectangle {
+        anchors.fill: parent
+        radius: 10
+        color: Qt.rgba(48 / 255, 37 / 255, 44 / 255, 0.88)
+        border.color: "#754c63"
+        border.width: 1
+        opacity: memoryPopup.visible ? 1 : 0
+        transform: Translate {
+          y: memoryPopup.visible ? 0 : -14
+          Behavior on y { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+        }
+        Behavior on opacity { NumberAnimation { duration: 150 } }
+        Column {
+          id: memoryDetails
+          anchors.fill: parent
+          anchors.margins: 14
+          spacing: 10
+          Row {
+            spacing: 8
+            BarLabel { text: "Memory"; color: "#f7a6cb"; font.pixelSize: 18 }
+            BarLabel {
+              text: bar.memoryStats.total ? `${bar.formatBytes(bar.memoryStats.used)} used of ${bar.formatBytes(bar.memoryStats.total)}` : "Loading..."
+              color: "#cdd6f4"
+              font.pixelSize: 14
+            }
+          }
+          HistoryGraph {
+            width: parent.width
+            height: 70
+            samples: bar.memoryHistory
+            lineColor: "#f7a6cb"
+          }
+          Rectangle { width: parent.width; height: 1; color: "#46363a" }
+          Grid {
+            columns: 2
+            columnSpacing: 50
+            rowSpacing: 6
+            Repeater {
+              model: [
+                ["Used", bar.memoryStats.used],
+                ["Available", bar.memoryStats.available],
+                ["Cache", bar.memoryStats.cache],
+                ["Buffers", bar.memoryStats.buffers],
+                ["Free", bar.memoryStats.free],
+                ["Swap", bar.memoryStats.swapUsed]
+              ]
+              delegate: Row {
+                required property var modelData
+                width: 170
+                BarLabel { width: 78; text: modelData[0]; color: "#9399b2"; font.pixelSize: 13 }
+                BarLabel {
+                  text: bar.memoryStats.total ? bar.formatBytes(modelData[1]) : "--"
+                  color: "#cdd6f4"
+                  font.pixelSize: 13
+                }
+              }
+            }
+          }
+          BarLabel {
+            text: bar.memoryStats.swapTotal ? `Swap: ${bar.formatBytes(bar.memoryStats.swapUsed)} / ${bar.formatBytes(bar.memoryStats.swapTotal)}` : "No swap configured"
+            color: "#9399b2"
+            font.pixelSize: 12
+          }
+        }
+      }
+    }
+
+    PopupWindow {
+      id: networkPopup
+      anchor.window: bar
+      anchor.rect.x: rightModules.x + networkModule.x + networkModule.width / 2 - width / 2
+      anchor.rect.y: bar.height + 6
+      implicitWidth: 450
+      implicitHeight: networkDetails.implicitHeight + 28
+      visible: false
+      grabFocus: true
+      color: "transparent"
+      Rectangle {
+        anchors.fill: parent
+        radius: 10
+        color: Qt.rgba(36 / 255, 41 / 255, 51 / 255, 0.88)
+        border.color: "#4d6387"
+        border.width: 1
+        opacity: networkPopup.visible ? 1 : 0
+        transform: Translate {
+          y: networkPopup.visible ? 0 : -14
+          Behavior on y { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+        }
+        Behavior on opacity { NumberAnimation { duration: 150 } }
+        Column {
+          id: networkDetails
+          anchors.fill: parent
+          anchors.margins: 14
+          spacing: 10
+          Row {
+            spacing: 8
+            BarLabel { text: "Network"; color: "#89b4fa"; font.pixelSize: 18 }
+            BarLabel { text: bar.networkInterface || "No default route"; color: "#cdd6f4"; font.pixelSize: 14 }
+            BarLabel { text: "Last 30 seconds"; color: "#9399b2"; font.pixelSize: 12 }
+          }
+          Row {
+            width: parent.width
+            BarLabel { width: parent.width / 2; text: `󰛴  ${bar.uploadRate}`; color: "#94e2d5"; font.pixelSize: 14 }
+            BarLabel { width: parent.width / 2; horizontalAlignment: Text.AlignRight; text: `󰛳  ${bar.downloadRate}`; color: "#89b4fa"; font.pixelSize: 14 }
+          }
+          DualHistoryGraph {
+            width: parent.width
+            height: 120
+            uploadSamples: bar.uploadHistory
+            downloadSamples: bar.downloadHistory
+            maximum: Math.max(bar.historyMaximum(bar.uploadHistory), bar.historyMaximum(bar.downloadHistory))
+          }
+          Rectangle { width: parent.width; height: 1; color: "#46363a" }
+          Row {
+            spacing: 24
+            BarLabel { text: `Received: ${bar.formatBytes(bar.networkRxBytes)}`; color: "#cdd6f4"; font.pixelSize: 13 }
+            BarLabel { text: `Sent: ${bar.formatBytes(bar.networkTxBytes)}`; color: "#cdd6f4"; font.pixelSize: 13 }
+          }
+        }
+      }
+    }
 
     PopupWindow {
       id: systemPopup
