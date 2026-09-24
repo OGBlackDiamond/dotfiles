@@ -1073,7 +1073,7 @@ ShellRoot {
     PopupWindow {
       id: mediaPopup
       anchor.window: bar
-      anchor.rect.x: bar.width / 2 - width / 2
+      anchor.rect.x: centerModules.x + clockModule.x + clockModule.width / 2 - width / 2
       anchor.rect.y: bar.height + 6
       implicitWidth: 600
       implicitHeight: 440
@@ -1098,7 +1098,8 @@ ShellRoot {
           spacing: 22
 
           ColumnLayout {
-            Layout.preferredWidth: 260
+            Layout.fillWidth: true
+            Layout.preferredWidth: 1
             Layout.fillHeight: true
             spacing: 10
             BarLabel {
@@ -1187,9 +1188,16 @@ ShellRoot {
 
           ColumnLayout {
             Layout.fillWidth: true
+            Layout.preferredWidth: 1
             Layout.fillHeight: true
             spacing: 10
-            BarLabel { text: "Now Playing"; color: "#a6e3a1"; font.pixelSize: 17 }
+            BarLabel {
+              Layout.fillWidth: true
+              horizontalAlignment: Text.AlignHCenter
+              text: "Now Playing"
+              color: "#a6e3a1"
+              font.pixelSize: 17
+            }
             Image {
               Layout.alignment: Qt.AlignHCenter
               Layout.preferredWidth: 130
