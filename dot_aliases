@@ -8,3 +8,5 @@ alias fix-esp="sudo chmod a+rw /dev/ttyUSB0"
 alias cmd-screensaver="bash ~/bin/cmd-screensaver"
 
 alias launch-screensaver="bash ~/bin/launch-screensaver"
+
+alias llama.cpp="llama-server -m /data/models/qwen2.5-coder-14b-instruct-q5_k_m.gguf -ngl 99 -c 16000"
