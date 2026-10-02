@@ -2,10 +2,10 @@
 HOST hashmal
 	HOSTNAME hashmal.ogblackdiamond.dev
 	USER caden
-	PORT 20022
+	PORT 22
 {{ end }}
 
-HOST zaku-from-rx
+HOST zaku-from-hashmal
 	HOSTNAME zaku
 	ProxyJump hashmal
 	PORT 22

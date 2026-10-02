@@ -190,11 +190,11 @@ ShellRoot {
 
   PanelWindow {
     id: bar
-    // Prefer the enabled internal panel; otherwise stay on one stable dock display.
+    // Prefer the internal panel, then the designated dock displays, and never a disabled output.
     screen: Quickshell.screens.find(screen => {
       const monitor = Hyprland.monitorFor(screen)
       return monitor?.name === "eDP-1" && monitor.activeWorkspace !== null
-    }) || Quickshell.screens.find(screen => Hyprland.monitorFor(screen)?.description === "Dell Inc. DELL U2424HE 8NCB4X3") || Quickshell.screens[0]
+    }) || Quickshell.screens.find(screen => Hyprland.monitorFor(screen)?.description === "Dell Inc. DELL U2424HE 8NCB4X3") || Quickshell.screens.find(screen => Hyprland.monitorFor(screen)?.description === "LG Electronics LG ULTRAWIDE 0x0003CCF3") || Quickshell.screens.find(screen => Hyprland.monitorFor(screen)?.description === "Dell Inc. DELL U2424HE 2QCB4X3") || Quickshell.screens.find(screen => Hyprland.monitorFor(screen)?.activeWorkspace !== null) || Quickshell.screens[0]
     anchors {
       top: true
       left: true
