@@ -4,25 +4,30 @@ profile docked {
     output eDP-1 disable
     output "Dell Inc. DELL U2424HE 2QCB4X3" enable mode 1920x1080@120Hz position 1920,0 scale 1
     output "Dell Inc. DELL U2424HE 8NCB4X3" enable mode 1920x1080@120Hz position 3840,0 scale 1
+    exec /home/caden/bin/restart-quickshell
 }
 
 profile docked-left {
     output eDP-1 disable
     output "Dell Inc. DELL U2424HE 2QCB4X3" enable mode 1920x1080@120Hz position 1920,0 scale 1
+    exec /home/caden/bin/restart-quickshell
 }
 
 profile docked-right {
     output eDP-1 disable
     output "Dell Inc. DELL U2424HE 8NCB4X3" enable mode 1920x1080@120Hz position 3840,0 scale 1
+    exec /home/caden/bin/restart-quickshell
 }
 
 profile docked-ultrawide-samsung {
     output eDP-1 disable
     output "Samsung Electric Company Odyssey G5 HNBY805888" enable mode 2560x1440@59.95Hz position 0,0 transform 90 scale 1
     output "LG Electronics LG ULTRAWIDE 0x0003CCF3" enable mode 3440x1440@59.97Hz position 1440,0 scale 1
+    exec /home/caden/bin/restart-quickshell
 }
 
 profile laptop {
     output eDP-1 enable mode preferred position 0,0 scale 1
+    exec /home/caden/bin/restart-quickshell
 }
 {{- end }}
