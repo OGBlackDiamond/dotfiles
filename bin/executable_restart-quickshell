@@ -1,0 +1,6 @@
+#!/bin/sh
+
+while quickshell kill --any-display; do
+    :
+done
+exec quickshell --daemonize

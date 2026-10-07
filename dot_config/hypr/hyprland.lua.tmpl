@@ -50,7 +50,9 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("swaync")
     hl.exec_cmd("sh -lc 'command -v swayosd-server >/dev/null 2>&1 && swayosd-server'")
     hl.exec_cmd("hyprpaper")
+{{ if ne $machineType "laptop" }}
     hl.exec_cmd("sh -lc 'sleep 1; exec /usr/bin/quickshell --no-duplicate >/tmp/quickshell.log 2>&1'")
+{{ end }}
     hl.exec_cmd("udiskie")
     hl.exec_cmd("hypridle")
 {{ if eq $machineType "laptop" }}
