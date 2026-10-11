@@ -1,0 +1,10 @@
+#!/bin/sh
+
+exec 9>/tmp/restart-quickshell.lock
+flock -n 9 || exit 0
+
+while quickshell kill --any-display; do
+    :
+done
+quickshell --daemonize
+sleep 1
