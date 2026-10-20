@@ -93,6 +93,8 @@ vim.api.nvim_create_autocmd("FileType", {
 
         local parser_by_ft = {
             qml = "qmljs",
+            tex = "latex",
+            plaintex = "latex",
         }
         local parser = parser_by_ft[ft] or ft
         local installed = cfg.get_installed()

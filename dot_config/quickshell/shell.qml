@@ -28,6 +28,23 @@ ShellRoot {
   property var battery: UPower.devices.values.find(device => device.isLaptopBattery) || null
   property var defaultAudioSink: Pipewire.defaultAudioSink
 
+  function preferredBarScreen() {
+    const descriptions = [
+      "Dell Inc. DELL U2424HE 8NCB4X3",
+      "LG Electronics LG ULTRAWIDE 0x0003CCF3",
+      "Dell Inc. DELL U2424HE 2QCB4X3"
+    ]
+    const internal = Quickshell.screens.find(screen => {
+      const monitor = Hyprland.monitorFor(screen)
+      return monitor?.name === "eDP-1" && monitor.activeWorkspace !== null
+    })
+    return internal || Quickshell.screens.find(screen =>
+      descriptions.includes(Hyprland.monitorFor(screen)?.description)
+    ) || Quickshell.screens.find(screen =>
+      Hyprland.monitorFor(screen)?.activeWorkspace !== null
+    ) || Quickshell.screens[0]
+  }
+
   // PipeWire only exposes live volume state for tracked objects.
   PwObjectTracker {
     objects: [root.defaultAudioSink]
@@ -190,11 +207,8 @@ ShellRoot {
 
   PanelWindow {
     id: bar
-    // Prefer the internal panel, then the designated dock displays, and never a disabled output.
-    screen: Quickshell.screens.find(screen => {
-      const monitor = Hyprland.monitorFor(screen)
-      return monitor?.name === "eDP-1" && monitor.activeWorkspace !== null
-    }) || Quickshell.screens.find(screen => Hyprland.monitorFor(screen)?.description === "Dell Inc. DELL U2424HE 8NCB4X3") || Quickshell.screens.find(screen => Hyprland.monitorFor(screen)?.description === "LG Electronics LG ULTRAWIDE 0x0003CCF3") || Quickshell.screens.find(screen => Hyprland.monitorFor(screen)?.description === "Dell Inc. DELL U2424HE 2QCB4X3") || Quickshell.screens.find(screen => Hyprland.monitorFor(screen)?.activeWorkspace !== null) || Quickshell.screens[0]
+    // The target is refreshed below because the screen list is not reactive to hotplug events.
+    screen: root.preferredBarScreen()
     anchors {
       top: true
       left: true
@@ -1441,6 +1455,16 @@ ShellRoot {
           }
         }
       }
+    }
+  }
+
+  Timer {
+    interval: 1000
+    running: true
+    repeat: true
+    onTriggered: {
+      const screen = root.preferredBarScreen()
+      if (screen && bar.screen !== screen) bar.screen = screen
     }
   }
 }

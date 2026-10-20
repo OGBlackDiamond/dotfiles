@@ -81,6 +81,14 @@ vim.lsp.config("clangd", {
     },
 })
 
+vim.lsp.config("arduino_language_server", {
+    cmd = {
+        "arduino-language-server",
+        "-cli-config",
+        vim.fn.expand("~/.arduino15/arduino-cli.yaml"),
+    },
+})
+
 vim.lsp.config("gopls", {
     settings = {
         gopls = {

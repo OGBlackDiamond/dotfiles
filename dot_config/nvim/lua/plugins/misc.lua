@@ -1,10 +1,34 @@
 return {
+    -- LaTeX editing, compilation, and PDF-viewer integration. VimTeX must not
+    -- be lazy-loaded: inverse search relies on its global command.
+    {
+        "lervag/vimtex",
+        lazy = false,
+        init = function()
+            vim.g.vimtex_view_method = "sioyek"
+        end,
+    },
+
     -- In-editor markdown rendering (headings, code blocks, tables, etc.)
     -- snacks.nvim picker preview automatically uses this when installed
     {
         "MeanderingProgrammer/render-markdown.nvim",
         ft = { "markdown" },
         opts = {},
+    },
+
+    -- Live Markdown preview in the default browser with synchronized scrolling.
+    {
+        "iamcco/markdown-preview.nvim",
+        ft = { "markdown" },
+        cmd = { "MarkdownPreview", "MarkdownPreviewStop", "MarkdownPreviewToggle" },
+        build = "cd app && npx --yes yarn install",
+        init = function()
+            vim.g.mkdp_filetypes = { "markdown" }
+        end,
+        keys = {
+            { "<leader>mp", "<cmd>MarkdownPreviewToggle<cr>", ft = "markdown", desc = "Toggle Markdown Preview" },
+        },
     },
 
     -- Paired delimiters without custom mappings that interfere with bit shifts.
