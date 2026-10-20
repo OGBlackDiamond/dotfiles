@@ -100,6 +100,9 @@ vim.lsp.config("gopls", {
 
 vim.lsp.config("bashls", {})
 
+-- TexLab provides LaTeX completion, diagnostics, and label/citation support.
+vim.lsp.config("texlab", {})
+
 -- jdtls: override cmd to use the Mason-installed wrapper.
 -- The built-in lspconfig config handles per-project -data workspace dirs
 -- automatically via its cmd function, so no FileType autocmd is needed.
@@ -144,6 +147,7 @@ return {
                 "rust_analyzer",
                 "bashls",
                 "jdtls",
+                "texlab",
             },
 
         },
