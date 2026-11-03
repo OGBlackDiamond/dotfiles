@@ -83,9 +83,15 @@ vim.lsp.config("clangd", {
 
 vim.lsp.config("arduino_language_server", {
     cmd = {
-        "arduino-language-server",
+        vim.fn.stdpath("data") .. "/mason/bin/arduino-language-server",
+        "-cli",
+        "arduino-cli",
         "-cli-config",
         vim.fn.expand("~/.arduino15/arduino-cli.yaml"),
+        "-clangd",
+        vim.fn.stdpath("data") .. "/mason/bin/clangd",
+        "-fqbn",
+        "arduino:avr:mega",
     },
 })
 
@@ -143,6 +149,7 @@ return {
                 "ts_ls",
                 "pyright",
                 "clangd",
+                "arduino_language_server",
                 "gopls",
                 "rust_analyzer",
                 "bashls",

@@ -46,10 +46,10 @@ vim.api.nvim_create_autocmd("FileType", {
     end,
 })
 
--- wrap and check for spell in text filetypes
+-- wrap and check spelling in prose-oriented filetypes, including LaTeX text
 vim.api.nvim_create_autocmd("FileType", {
     group = augroup,
-    pattern = { "text", "plaintex", "typst", "gitcommit", "markdown" },
+    pattern = { "text", "tex", "plaintex", "typst", "gitcommit", "markdown" },
     callback = function()
         vim.opt_local.wrap = true
         vim.opt_local.spell = true

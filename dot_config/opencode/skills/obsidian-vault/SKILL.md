@@ -1,11 +1,11 @@
 ---
 name: obsidian-vault
-description: MUST be loaded before using the Obsidian MCP server. Provides all guidelines, conventions, and agent instructions for working with the Obsidian vault at /home/caden/Documents/Obsidian Vault.
+description: MUST be loaded before using the Obsidian MCP server. Provides all guidelines, conventions, and agent instructions for working with the Obsidian vault at /home/caden/Documents/obsidan-vault.
 ---
 
 Before using any Obsidian MCP tools, read the full AGENTS.md file from the vault:
 
-**Path:** `/home/caden/Documents/obsidian-vault/AGENTS.md`
+**Path:** `/home/caden/Documents/obsidan-vault/AGENTS.md`
 
 **UNLESS YOU ARE ALREADY IN THE VAULT DIRECTORY! DO NOT RE-READ THIS FILE IF YOU ARE ALREADY IN THE VAULT DIRECTORY**
 
