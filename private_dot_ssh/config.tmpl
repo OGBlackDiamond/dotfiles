@@ -1,11 +1,16 @@
-{{ if not (eq .chezmoi.hostname "zaku") }}
+{{ if eq .machineType "laptop" }}
 HOST hashmal
 	HOSTNAME hashmal.ogblackdiamond.dev
 	USER caden
 	PORT 22
-{{ end }}
+
+HOST openptz-dev
+	HOSTNAME 10.176.244.118
+	USER admin
+	PORT 22
 
 HOST zaku-from-hashmal
 	HOSTNAME zaku
 	ProxyJump hashmal
 	PORT 22
+{{ end }}
